@@ -12,13 +12,14 @@ import { router } from 'expo-router';
 const { width } = Dimensions.get('window');
 
 // --- DATA POOLS (Defined outside to prevent "Cannot find name" errors) ---
+// ! Not working
 const KURAL_POOL = [
-    { 
-        number: 391, 
-        line1: "கற்க கசடறக் கற்பவை கற்றபின்", 
-        line2: "நிற்க அதற்குத் தக.", 
-        translation: "Learn perfectly what should be learned; and then live according to that learning." 
-    },
+    // { 
+    //     number: 391, 
+    //     line1: "கற்க கசடறக் கற்பவை கற்றபின்", 
+    //     line2: "நிற்க அதற்குத் தக.", 
+    //     translation: "Learn perfectly what should be learned; and then live according to that learning." 
+    // },
     { 
         number: 666, 
         line1: "எண்ணிய எண்ணியாங்கு எய்துப எண்ணியார்", 
