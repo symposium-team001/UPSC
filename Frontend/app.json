@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "Ethora",
+    "slug": "ethora",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "rork-app",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "app.rork.superkalam-clone-frontend"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      },
+      "package": "app.rork.superkalam_clone_frontend"
+    }
+  }
+}
