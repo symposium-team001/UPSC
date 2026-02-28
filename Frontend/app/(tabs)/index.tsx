@@ -11,15 +11,13 @@ import { router } from 'expo-router';
 
 const { width } = Dimensions.get('window');
 
-// --- DATA POOLS (Defined outside to prevent "Cannot find name" errors) ---
-// ! Not working
 const KURAL_POOL = [
-    // { 
-    //     number: 391, 
-    //     line1: "கற்க கசடறக் கற்பவை கற்றபின்", 
-    //     line2: "நிற்க அதற்குத் தக.", 
-    //     translation: "Learn perfectly what should be learned; and then live according to that learning." 
-    // },
+    { 
+        number: 391, 
+        line1: "கற்க கசடறக் கற்பவை கற்றபின்", 
+        line2: "நிற்க அதற்குத் தக.", 
+        translation: "Learn perfectly what should be learned; and then live according to that learning." 
+    },
     { 
         number: 666, 
         line1: "எண்ணிய எண்ணியாங்கு எய்துப எண்ணியார்", 
@@ -39,8 +37,7 @@ const AFFAIRS_DATA = [
     { id: '2', category: 'ECONOMY', title: 'RBI maintains Repo Rate at 6.5% for the fourth time.', readTime: '3 min read' },
 ];
 
-// --- HELPER COMPONENTS ---
-const TypewriterText = ({ text, style, delay = 40, active }: any) => {
+const TypewriterText = ({ text, style, delay = 30, active }: any) => {
     const [displayedText, setDisplayedText] = useState("");
     useEffect(() => {
         if (!active) { setDisplayedText(""); return; }
@@ -56,7 +53,6 @@ const TypewriterText = ({ text, style, delay = 40, active }: any) => {
     return <Text style={style}>{displayedText}</Text>;
 };
 
-// --- MAIN HOME SCREEN ---
 export default function HomeScreen() {
     const { theme } = useTheme();
     const [currentKural, setCurrentKural] = useState(KURAL_POOL[0]);
@@ -64,32 +60,35 @@ export default function HomeScreen() {
     const [isTyping, setIsTyping] = useState(false);
     const userName = "Buddy";
 
-    // GUARD: Remembers if we already spoke the welcome message
+    // GUARD: Persistent welcome check
     const hasWelcomed = useRef(false);
-
     const slideLeftAnim = useRef(new Animated.Value(-20)).current; 
     const kuralFadeAnim = useRef(new Animated.Value(0)).current;
-    const timeouts = useRef<any[]>([]);
 
     const stopAllAudio = () => {
         Speech.stop();
-        timeouts.current.forEach(clearTimeout);
-        timeouts.current = [];
         setIsSpeaking(false);
     };
 
     const speakKuralOnly = () => {
         stopAllAudio();
         setIsSpeaking(true);
-        Speech.speak(`${currentKural.line1} ${currentKural.line2}`, { language: 'ta-IN', rate: 0.85 });
-        const t1 = setTimeout(() => {
-            Speech.speak("In English, we say...", { language: 'en-US', rate: 0.9 });
-        }, 3500);
-        const t2 = setTimeout(() => {
-            Speech.speak(currentKural.translation, { language: 'en-US', rate: 1.0 });
-            setIsSpeaking(false);
-        }, 5500);
-        timeouts.current.push(t1, t2);
+
+        // 1. Speak Tamil immediately (Using 'ta' as fallback)
+        Speech.speak(`${currentKural.line1}. ${currentKural.line2}`, { 
+            language: 'ta', 
+            rate: 0.9,
+            pitch: 1.0,
+            onDone: () => {
+                // 2. Speak English as soon as Tamil finishes (No more hardcoded timeouts)
+                Speech.speak(`In English: ${currentKural.translation}`, {
+                    language: 'en-US',
+                    rate: 1.0,
+                    onDone: () => setIsSpeaking(false)
+                });
+            },
+            onError: () => setIsSpeaking(false)
+        });
     };
 
     const runKuralAnimation = () => {
@@ -97,18 +96,18 @@ export default function HomeScreen() {
         kuralFadeAnim.setValue(0);
         slideLeftAnim.setValue(-20);
         Animated.parallel([
-            Animated.timing(kuralFadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
-            Animated.spring(slideLeftAnim, { toValue: 0, tension: 45, friction: 8, useNativeDriver: true })
+            Animated.timing(kuralFadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
+            Animated.spring(slideLeftAnim, { toValue: 0, tension: 50, friction: 7, useNativeDriver: true })
         ]).start(() => { setIsTyping(true); });
     };
 
     useEffect(() => {
         runKuralAnimation();
         
-        // ONLY speak welcome if it hasn't happened yet in this session
+        // STRICT ONE-TIME WELCOME (Checks if it already happened)
         if (!hasWelcomed.current) {
-            Speech.speak(`Hey, welcome ${userName}!`, { language: 'en-US', rate: 0.9 });
-            hasWelcomed.current = true; // Lock it so it doesn't repeat
+            Speech.speak(`Hey, welcome ${userName}!`, { language: 'en-US', rate: 1.0 });
+            hasWelcomed.current = true; 
         }
 
         return () => stopAllAudio();
@@ -116,7 +115,7 @@ export default function HomeScreen() {
 
     const handleShuffle = () => {
         stopAllAudio();
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         const filtered = KURAL_POOL.filter(k => k.number !== currentKural.number);
         const next = filtered[Math.floor(Math.random() * filtered.length)];
         setCurrentKural(next);
@@ -125,8 +124,6 @@ export default function HomeScreen() {
 
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>
-            
-            {/* --- FIXED HEADER (One place for welcome text) --- */}
             <View style={[styles.fixedHeader, { backgroundColor: theme.background }]}>
                 <View>
                     <Text style={[styles.dateText, { color: theme.textSecondary }]}>
@@ -139,48 +136,26 @@ export default function HomeScreen() {
                 </TouchableOpacity>
             </View>
 
-            <ScrollView 
-                showsVerticalScrollIndicator={false} 
-                contentContainerStyle={styles.scrollContent}
-            >
-                {/* KURAL SECTION */}
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
                 <Animated.View style={[styles.kuralSection, { opacity: kuralFadeAnim }]}>
                     <View style={styles.kuralHeaderRow}>
                         <Animated.View style={{ flex: 1, transform: [{ translateX: slideLeftAnim }] }}>
-                            <TypewriterText 
-                                active={isTyping}
-                                text={currentKural.line1} 
-                                style={[styles.kuralLine, { color: theme.text }]} 
-                            />
-                            <TypewriterText 
-                                active={isTyping}
-                                delay={60} 
-                                text={currentKural.line2} 
-                                style={[styles.kuralLine, { color: theme.text, marginTop: 4 }]} 
-                            />
+                            <TypewriterText active={isTyping} text={currentKural.line1} style={[styles.kuralLine, { color: theme.text }]} />
+                            <TypewriterText active={isTyping} delay={50} text={currentKural.line2} style={[styles.kuralLine, { color: theme.text, marginTop: 4 }]} />
                         </Animated.View>
-                        
-                        <TouchableOpacity 
-                            onPress={isSpeaking ? stopAllAudio : speakKuralOnly}
-                            style={[styles.voiceButton, { backgroundColor: isSpeaking ? theme.primary : theme.surface }]}
-                        >
+                        <TouchableOpacity onPress={isSpeaking ? stopAllAudio : speakKuralOnly} style={[styles.voiceButton, { backgroundColor: isSpeaking ? theme.primary : theme.surface }]}>
                             {isSpeaking ? <VolumeX size={22} color="#FFF" /> : <Volume2 size={22} color={theme.primary} />}
                         </TouchableOpacity>
                     </View>
-                    
                     {isTyping && (
                         <View>
-                            <Text style={[styles.kuralTranslation, { color: theme.textSecondary }]}>
-                                "{currentKural.translation}"
-                            </Text>
-                            <Text style={[styles.kuralNumber, { color: theme.primary }]}>
-                                — Kural {currentKural.number}
-                            </Text>
+                            <Text style={[styles.kuralTranslation, { color: theme.textSecondary }]}>"{currentKural.translation}"</Text>
+                            <Text style={[styles.kuralNumber, { color: theme.primary }]}>— Kural {currentKural.number}</Text>
                         </View>
                     )}
                 </Animated.View>
 
-                {/* CURRENT AFFAIRS */}
+                {/* --- Section Title and Horizontal Scroll for Current Affairs --- */}
                 <View style={styles.section}>
                     <Text style={[styles.sectionTitle, { color: theme.text }]}>Current Affairs</Text>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingLeft: 24, paddingRight: 10 }}>
@@ -197,7 +172,7 @@ export default function HomeScreen() {
                     </ScrollView>
                 </View>
 
-                {/* MOCK TEST CHALLENGE */}
+                {/* --- Mock Test Banner --- */}
                 <View style={[styles.mockCard, { backgroundColor: theme.primary, marginTop: 30 }]}>
                     <View style={styles.mockContent}>
                         <Zap size={22} color="#FFF" fill="#FFF" />
@@ -218,22 +193,11 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
     container: { flex: 1 },
     fixedHeader: { 
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 10,
-        flexDirection: 'row', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        paddingHorizontal: 24, 
-        paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 20 : 60,
-        paddingBottom: 20,
+        position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, flexDirection: 'row', 
+        justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, 
+        paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 20 : 60, paddingBottom: 20,
     },
-    scrollContent: { 
-        paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 130 : 170, 
-        paddingBottom: 40 
-    },
+    scrollContent: { paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 130 : 170, paddingBottom: 40 },
     dateText: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase' },
     userName: { fontSize: 26, fontWeight: '800' },
     shuffleButton: { width: 48, height: 48, borderRadius: 16, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
