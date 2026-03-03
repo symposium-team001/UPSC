@@ -1,145 +1,122 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated, Platform } from 'react-native';
-import { BookOpen, Globe, Scale, TrendingUp, Leaf, Cpu } from 'lucide-react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Dimensions } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useTheme } from '../../context/ThemeContext';
+import { BookOpen, ArrowRight } from 'lucide-react-native'; 
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { MotiView, MotiText } from 'moti'; 
 import * as Haptics from 'expo-haptics';
-import { useTheme } from '../../context/ThemeContext'; // Dynamic Theme Hook
-import { modules } from '../../mocks/modules';
 
-const iconMap: Record<string, any> = {
-    BookOpen,
-    Globe,
-    Scale,
-    TrendingUp,
-    Leaf,
-    Cpu,
-};
+const { width } = Dimensions.get('window');
+const isMobile = width < 768;
+
+const MODULES = [
+    { id: '1', title: 'History', category: 'SOCIAL STUDIES', description: 'Comprehensive coverage of Ancient, Medieval, and Modern Indian History.', progress: 0.65 },
+    { id: '2', title: 'Geography', category: 'PHYSICAL & HUMAN', description: 'Indian and World Geography, focusing on physical features and climate.', progress: 0.30 },
+    { id: '3', title: 'Polity', category: 'CONSTITUTION & GOVERNANCE', description: 'Deep dive into the Indian Constitution, parliamentary system, and policy.', progress: 0.85 },
+    { id: '4', title: 'Economy', category: 'INDIAN ECONOMICS', description: 'Economic development, sustainable goals, and current financial trends.', progress: 0.10 },
+];
 
 export default function LearnScreen() {
     const { theme, isDarkMode } = useTheme();
+    const router = useRouter();
+    const [hoveredId, setHoveredId] = useState<string | null>(null);
 
-    const animatedValues = useRef(
-        modules.map(() => ({
-            opacity: new Animated.Value(0),
-            translateY: new Animated.Value(30),
-            scale: new Animated.Value(1),
-        }))
-    ).current;
+    const primaryTeal = '#4A7C82';
+    const cardBg = isDarkMode ? '#1E293B' : '#FFFFFF';
+    const borderCol = isDarkMode ? '#334155' : '#EDF2F7';
 
-    useEffect(() => {
-        const animations = modules.map((_, index) =>
-            Animated.parallel([
-                Animated.timing(animatedValues[index].opacity, {
-                    toValue: 1,
-                    duration: 500,
-                    delay: index * 80, // Slightly faster stagger
-                    useNativeDriver: true,
-                }),
-                Animated.timing(animatedValues[index].translateY, {
-                    toValue: 0,
-                    duration: 500,
-                    delay: index * 80,
-                    useNativeDriver: true,
-                }),
-            ])
-        );
-
-        Animated.stagger(0, animations).start();
-    }, []);
-
-    const createPressAnimation = (index: number) => ({
-        onPressIn: () => {
+    const handlePress = (id: string) => {
+        if (Platform.OS !== 'web') {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            Animated.spring(animatedValues[index].scale, {
-                toValue: 0.97,
-                useNativeDriver: true,
-            }).start();
-        },
-        onPressOut: () => {
-            Animated.spring(animatedValues[index].scale, {
-                toValue: 1,
-                useNativeDriver: true,
-            }).start();
-        },
-    });
+        }
+    };
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.background }]}>
-            {/* Header - Fixed & Adaptive */}
-            <View style={[styles.header, { 
-                backgroundColor: theme.surface, 
-                borderBottomColor: theme.border 
-            }]}>
-                <Text style={[styles.headerTitle, { color: theme.text }]}>Learn</Text>
-                <Text style={[styles.headerSubtitle, { color: theme.textSecondary }]}>Master the UPSC syllabus</Text>
-            </View>
+        <View style={[styles.container, { backgroundColor: isDarkMode ? '#0F172A' : '#F8FAFC' }]}>
 
-            <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-                <View style={styles.content}>
-                    {modules.map((module, index) => {
-                        const IconComponent = iconMap[module.icon];
-                        return (
-                            <Animated.View
+            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+                <SafeAreaView edges={['bottom']} style={styles.mainWrapper}>
+                    
+                    <View style={styles.header}>
+                        {/* FIXED: Changed 'y' to 'translateY' */}
+                        <MotiText 
+                            from={{ opacity: 0, translateY: 10 }}
+                            animate={{ opacity: 1, translateY: 0 }}
+                            style={[styles.headerTitle, { color: theme.text }]}
+                        >
+                            Learn
+                        </MotiText>
+                        <Text style={[styles.subTitle, { color: theme.textSecondary }]}>
+                            Master the UPSC syllabus with curated modules
+                        </Text>
+                    </View>
+
+                    <View style={styles.grid}>
+                        {MODULES.map((module, index) => (
+                            <MotiView
                                 key={module.id}
-                                style={{
-                                    opacity: animatedValues[index].opacity,
-                                    transform: [
-                                        { translateY: animatedValues[index].translateY },
-                                        { scale: animatedValues[index].scale },
-                                    ],
-                                }}
+                                from={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ type: 'spring', delay: index * 100 }}
+                                style={[styles.cardWrapper, { width: isMobile ? '100%' : '48.5%' }]}
                             >
-                                <TouchableOpacity
-                                    style={[styles.moduleCard, { 
-                                        backgroundColor: theme.surface, 
-                                        borderColor: theme.border,
-                                        // Adding a subtle glow effect in dark mode
-                                        shadowOpacity: isDarkMode ? 0 : 0.1 
-                                    }]}
-                                    activeOpacity={1}
-                                    {...createPressAnimation(index)}
+                                <TouchableOpacity 
+                                    activeOpacity={0.9}
+                                    onPress={() => handlePress(module.id)}
+                                    // FIXED: Platform-safe props to avoid 'onMouseEnter' error
+                                    {...(Platform.OS === 'web' ? {
+                                        onMouseEnter: () => setHoveredId(module.id),
+                                        onMouseLeave: () => setHoveredId(null)
+                                    } : {} as any)}
+                                    style={[
+                                        styles.moduleCard, 
+                                        { 
+                                            backgroundColor: cardBg, 
+                                            borderColor: hoveredId === module.id ? primaryTeal : borderCol 
+                                        },
+                                        // Web-only shadow effect
+                                        (Platform.OS === 'web' && hoveredId === module.id) && {
+                                            boxShadow: `0 12px 24px -10px ${primaryTeal}60`,
+                                            transform: 'translateY(-4px)'
+                                        }
+                                    ]}
                                 >
-                                    <View style={styles.moduleHeader}>
-                                        <View
-                                            style={[styles.moduleIcon, { backgroundColor: `${module.color}15` }]}
-                                        >
-                                            <IconComponent size={24} color={module.color} />
+                                    <View style={styles.cardTop}>
+                                        <View style={[styles.iconBox, { backgroundColor: isDarkMode ? '#0F172A' : '#F0F7F8' }]}>
+                                            <BookOpen size={20} color={primaryTeal} />
                                         </View>
-                                        <View style={styles.moduleInfo}>
-                                            <Text style={[styles.moduleTitle, { color: theme.text }]}>{module.title}</Text>
-                                            <Text style={[styles.moduleDescription, { color: theme.textSecondary }]}>
-                                                {module.description}
-                                            </Text>
+                                        <View style={styles.titleContainer}>
+                                            <Text style={[styles.categoryText, { color: primaryTeal }]}>{module.category}</Text>
+                                            <Text style={[styles.titleText, { color: theme.text }]}>{module.title}</Text>
                                         </View>
+                                        <ArrowRight size={18} color={isDarkMode ? '#64748B' : '#94A3B8'} />
                                     </View>
+                                    
+                                    <Text style={[styles.descText, { color: theme.textSecondary }]} numberOfLines={2}>
+                                        {module.description}
+                                    </Text>
 
-                                    <View style={styles.moduleProgress}>
-                                        <View style={styles.progressInfo}>
-                                            <Text style={[styles.progressText, { color: theme.textSecondary }]}>
-                                                {module.completedTopics}/{module.totalTopics} Topics
-                                            </Text>
-                                            <Text style={[styles.progressPercent, { color: theme.text }]}>
-                                                {module.progress}%
-                                            </Text>
-                                        </View>
-                                        <View style={[styles.progressBarContainer, { backgroundColor: theme.border }]}>
-                                            <View
-                                                style={[
-                                                    styles.progressBarFill,
-                                                    {
-                                                        width: `${module.progress}%`,
-                                                        backgroundColor: module.color,
-                                                    },
-                                                ]}
+                                    <View style={styles.progressSection}>
+                                        <View style={[styles.progressBarBg, { backgroundColor: isDarkMode ? '#0F172A' : '#E2E8F0' }]}>
+                                            <MotiView 
+                                                from={{ width: '0%' }}
+                                                animate={{ width: `${module.progress * 100}%` }}
+                                                transition={{ type: 'timing', duration: 1000, delay: 300 }}
+                                                style={[styles.progressBarFill, { backgroundColor: primaryTeal }]} 
                                             />
+                                        </View>
+                                        <View style={styles.progressLabelRow}>
+                                            <Text style={[styles.progressPercent, { color: theme.textSecondary }]}>
+                                                {Math.round(module.progress * 100)}% Complete
+                                            </Text>
                                         </View>
                                     </View>
                                 </TouchableOpacity>
-                            </Animated.View>
-                        );
-                    })}
-                </View>
-                {/* Extra padding for the bottom tab bar */}
-                <View style={{ height: 100 }} />
+                            </MotiView>
+                        ))}
+                    </View>
+                </SafeAreaView>
             </ScrollView>
         </View>
     );
@@ -147,78 +124,38 @@ export default function LearnScreen() {
 
 const styles = StyleSheet.create({
     container: { flex: 1 },
-    header: {
-        paddingHorizontal: 20,
-        paddingTop: Platform.OS === 'ios' ? 60 : 40,
-        paddingBottom: 20,
-        borderBottomWidth: 1,
+    scrollContent: { paddingBottom: 60 },
+    mainWrapper: { 
+        paddingHorizontal: isMobile ? 20 : '5%', 
+        maxWidth: 1200, 
+        alignSelf: 'center', 
+        width: '100%', 
+        paddingTop: isMobile ? 20 : 40 
     },
-    headerTitle: {
-        fontSize: 32,
-        fontWeight: '800',
-        marginBottom: 4,
-        letterSpacing: -0.5,
-    },
-    headerSubtitle: {
-        fontSize: 15,
-        fontWeight: '500',
-    },
-    scrollView: { flex: 1 },
-    content: { padding: 20 },
-    moduleCard: {
-        borderRadius: 20,
-        padding: 18,
-        marginBottom: 16,
-        borderWidth: 1,
+    header: { marginBottom: 32 },
+    headerTitle: { fontSize: isMobile ? 32 : 42, fontWeight: '900', letterSpacing: -1 },
+    subTitle: { fontSize: 16, marginTop: 4, fontWeight: '500' },
+    grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 20 },
+    cardWrapper: { marginBottom: 4 },
+    moduleCard: { 
+        padding: 24, 
+        borderRadius: 24, 
+        borderWidth: 1.5,
         ...Platform.select({
-            ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowRadius: 8 },
-            android: { elevation: 3 }
+            ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10 },
+            android: { elevation: 3 },
+            web: { transition: 'all 0.3s ease' }
         })
     },
-    moduleHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 18,
-    },
-    moduleIcon: {
-        width: 52,
-        height: 52,
-        borderRadius: 14,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 14,
-    },
-    moduleInfo: { flex: 1 },
-    moduleTitle: {
-        fontSize: 18,
-        fontWeight: '700',
-        marginBottom: 2,
-    },
-    moduleDescription: {
-        fontSize: 13,
-        lineHeight: 18,
-    },
-    moduleProgress: { gap: 8 },
-    progressInfo: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    progressText: {
-        fontSize: 12,
-        fontWeight: '600',
-    },
-    progressPercent: {
-        fontSize: 13,
-        fontWeight: '800',
-    },
-    progressBarContainer: {
-        height: 6,
-        borderRadius: 10,
-        overflow: 'hidden',
-    },
-    progressBarFill: {
-        height: '100%',
-        borderRadius: 10,
-    },
+    cardTop: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 16 },
+    iconBox: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+    titleContainer: { flex: 1 },
+    titleText: { fontSize: 20, fontWeight: '800' },
+    categoryText: { fontSize: 10, fontWeight: '800', letterSpacing: 0.5, marginBottom: 2 },
+    descText: { fontSize: 14, lineHeight: 20, marginBottom: 20 },
+    progressSection: { marginTop: 'auto' },
+    progressBarBg: { height: 8, borderRadius: 10, overflow: 'hidden' },
+    progressBarFill: { height: '100%', borderRadius: 10 },
+    progressLabelRow: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8 },
+    progressPercent: { fontSize: 12, fontWeight: '700' },
 });
