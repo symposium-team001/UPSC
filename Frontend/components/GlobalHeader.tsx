@@ -16,7 +16,7 @@ const SEARCH_DATABASE = [
 ];
 
 export default function GlobalHeader() {
-    const { theme } = useTheme();
+    const { theme, isDarkMode } = useTheme();
     const pathname = usePathname();
     const [searchQuery, setSearchQuery] = useState('');
     const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -39,11 +39,11 @@ export default function GlobalHeader() {
             <View style={styles.navInner}>
 
                 {/* LEFT: Logo */}
-                <View style={styles.leftSection}>
-                    <TouchableOpacity onPress={() => router.push('/')}>
-                        <Text style={[styles.logoText, { color: '#2D5A61' }]}>Ethora</Text>
+                <Link href="/" asChild>
+                    <TouchableOpacity>
+                        <Text style={[styles.logoText, { color: isDarkMode ? '#E2E8F0' : '#2D5A61' }]}>Ethora</Text>
                     </TouchableOpacity>
-                </View>
+                </Link>
 
                 {/* CENTER: Links (Visible only on Web) */}
                 {isWeb && (
@@ -55,7 +55,7 @@ export default function GlobalHeader() {
                                     <TouchableOpacity>
                                         <Text style={[
                                             styles.navLink,
-                                            { color: isActive ? '#2D5A61' : theme.textSecondary }
+                                            { color: isActive ? (isDarkMode ? '#E2E8F0' : '#2D5A61') : theme.textSecondary }
                                         ]}>
                                             {item.name}
                                         </Text>

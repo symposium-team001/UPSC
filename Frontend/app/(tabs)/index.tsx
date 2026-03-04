@@ -133,7 +133,7 @@ export default function HomeScreen() {
                     }}
                     style={[
                       styles.heroImage,
-                      { tintColor: isDarkMode ? "#E2E8F0" : "#2D5A61" },
+                      { tintColor: isDarkMode ? "#94A3B8" : "#2D5A61" },
                     ]}
                     resizeMode="contain"
                   />
