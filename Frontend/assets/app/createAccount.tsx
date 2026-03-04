@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { User, Mail, Lock, ChevronLeft, Eye, EyeOff } from 'lucide-react-native'; 
-import { useTheme } from '../context/ThemeContext'; 
+import { useTheme } from '@/context/ThemeContext';
 
 export default function CreateAccount() {
   const router = useRouter();

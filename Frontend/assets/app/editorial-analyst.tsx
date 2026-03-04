@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, Target, Sparkles, CheckCircle2, XCircle, Compass } from 'lucide-react-native';
-import { useTheme } from '../context/ThemeContext'; // Check this path matches your folder
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function EditorialAnalyst() {
     const { theme } = useTheme();
