@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
-import { 
-    View, 
-    Text, 
-    StyleSheet, 
-    TouchableOpacity, 
-    ScrollView, 
-    Dimensions, 
-    Platform, 
+import {
+    View,
+    Text,
+    StyleSheet,
+    TouchableOpacity,
+    ScrollView,
+    Dimensions,
+    Platform,
     Alert,
     SafeAreaView
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Check, ArrowRight, Zap } from 'lucide-react-native';
+import { Check, ArrowRight, Zap, ChevronLeft } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
 import GlobalHeader from '@/components/GlobalHeader';
@@ -45,9 +45,14 @@ export default function SubscriptionScreen() {
 
             <ScrollView contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false} bounces={false}>
                 <View style={s.mobileWrapper}>
-                    
+
                     {/* Header Section */}
                     <Animated.View entering={FadeInDown.duration(600)} style={s.headerSection}>
+                        {Platform.OS === 'web' && (
+                            <TouchableOpacity onPress={() => router.back()} style={{ position: 'absolute', left: 0, top: 0, padding: 8 }}>
+                                <ChevronLeft size={24} color={theme.text} />
+                            </TouchableOpacity>
+                        )}
                         <Zap size={32} color={primaryTeal} style={{ marginBottom: 15 }} />
                         <Text style={[s.mainTitle, { color: theme.text, fontSize: isMobile ? 32 : 44 }]}>
                             Unlock Ethora Pro
@@ -70,11 +75,11 @@ export default function SubscriptionScreen() {
                         {PLANS.map((plan, index) => {
                             const isSelected = selectedId === plan.id;
                             return (
-                                <Animated.View 
-                                    key={plan.id} 
+                                <Animated.View
+                                    key={plan.id}
                                     entering={FadeInDown.delay(300 + (index * 100))}
                                     style={[
-                                        s.planCard, 
+                                        s.planCard,
                                         { backgroundColor: theme.surface, borderColor: isSelected ? primaryTeal : (isDarkMode ? '#334155' : '#E2E8F0') },
                                         isSelected && { borderWidth: 2, transform: [{ scale: 1.02 }] }
                                     ]}
@@ -94,7 +99,7 @@ export default function SubscriptionScreen() {
                                             <Text style={[s.priceAmount, { color: theme.text }]}>{plan.price}</Text>
                                             <Text style={[s.pricePeriod, { color: theme.textSecondary }]}>{plan.period}</Text>
                                         </View>
-                                        
+
                                         <Text style={[s.planNote, { color: theme.textSecondary }]}>{plan.note}</Text>
                                     </TouchableOpacity>
                                 </Animated.View>
@@ -104,8 +109,8 @@ export default function SubscriptionScreen() {
 
                     {/* Sticky-style Bottom Button */}
                     <View style={s.actionContainer}>
-                        <TouchableOpacity 
-                            style={[s.bigActionBtn, { backgroundColor: primaryTeal }]} 
+                        <TouchableOpacity
+                            style={[s.bigActionBtn, { backgroundColor: primaryTeal }]}
                             onPress={() => handleUpgrade(PLANS.find(p => p.id === selectedId))}
                         >
                             <Text style={s.bigActionText}>Subscribe Now</Text>
@@ -146,10 +151,10 @@ const s = StyleSheet.create({
     mainTitle: { fontWeight: '900', textAlign: 'center', letterSpacing: -1 },
     mainSubtitle: { fontSize: 15, marginTop: 8, opacity: 0.8, textAlign: 'center' },
 
-    perksBox: { 
-        borderRadius: 20, 
-        padding: 20, 
-        borderWidth: 1, 
+    perksBox: {
+        borderRadius: 20,
+        padding: 20,
+        borderWidth: 1,
         marginBottom: 30,
         flexDirection: 'column',
         gap: 12
@@ -158,9 +163,9 @@ const s = StyleSheet.create({
     perkTitle: { fontSize: 14, fontWeight: '600' },
 
     pricingStack: { gap: 16, marginBottom: 40 },
-    planCard: { 
-        padding: 24, 
-        borderRadius: 20, 
+    planCard: {
+        padding: 24,
+        borderRadius: 20,
         borderWidth: 1,
     },
     cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
@@ -175,12 +180,12 @@ const s = StyleSheet.create({
     planNote: { fontSize: 13, lineHeight: 18 },
 
     actionContainer: { marginTop: 10 },
-    bigActionBtn: { 
-        height: 60, 
-        borderRadius: 16, 
-        flexDirection: 'row', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
+    bigActionBtn: {
+        height: 60,
+        borderRadius: 16,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
         width: '100%',
         ...Platform.select({
             ios: { shadowColor: '#4A767D', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 15 },

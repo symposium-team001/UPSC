@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Platform, SafeAreaView } from 'react-native';
-import { FileText, Download, BarChart2, Scale, ChevronRight } from 'lucide-react-native'; 
+import { FileText, Download, BarChart2, Scale, ChevronRight, ChevronLeft } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 import { useTheme } from '@/context/ThemeContext';
 import GlobalHeader from '../components/GlobalHeader';
 
@@ -9,6 +10,7 @@ const isMobile = width < 450;
 
 export default function LearningScreen() {
     const { theme, isDarkMode } = useTheme();
+    const router = useRouter();
     const primaryTeal = '#4A767D';
 
     const materials = [
@@ -21,27 +23,34 @@ export default function LearningScreen() {
         <SafeAreaView style={[s.container, { backgroundColor: isDarkMode ? '#0F172A' : '#F8FAFC' }]}>
             <GlobalHeader />
 
-            <ScrollView 
-                contentContainerStyle={s.scrollContent} 
+            <ScrollView
+                contentContainerStyle={s.scrollContent}
                 showsVerticalScrollIndicator={false}
                 bounces={false}
             >
                 <View style={s.mobileCenterWrapper}>
                     {/* Header Section */}
-                    <View style={s.pageHeader}>
-                        <Text style={[s.pageTitle, { color: theme.text, fontSize: isMobile ? 28 : 36 }]}>
-                            My Learning
-                        </Text>
-                        <Text style={[s.pageSubtitle, { color: theme.textSecondary }]}>
-                            Access your saved study materials
-                        </Text>
+                    <View style={[s.pageHeader, { flexDirection: 'row', alignItems: 'center' }]}>
+                        {Platform.OS === 'web' && (
+                            <TouchableOpacity onPress={() => router.back()} style={{ paddingRight: 16 }}>
+                                <ChevronLeft size={32} color={theme.text} />
+                            </TouchableOpacity>
+                        )}
+                        <View>
+                            <Text style={[s.pageTitle, { color: theme.text, fontSize: isMobile ? 28 : 36 }]}>
+                                My Learning
+                            </Text>
+                            <Text style={[s.pageSubtitle, { color: theme.textSecondary }]}>
+                                Access your saved study materials
+                            </Text>
+                        </View>
                     </View>
 
                     {/* Content Card */}
                     <View style={[s.contentCard, { backgroundColor: theme.surface, borderColor: isDarkMode ? '#334155' : '#E2E8F0' }]}>
                         {materials.map((item, index) => (
-                            <TouchableOpacity 
-                                key={item.id} 
+                            <TouchableOpacity
+                                key={item.id}
                                 style={[s.itemRow, index === materials.length - 1 && { borderBottomWidth: 0 }]}
                                 activeOpacity={0.7}
                             >
@@ -73,7 +82,7 @@ export default function LearningScreen() {
                                 <Text style={[s.viewAllText, { color: primaryTeal }]}>View all →</Text>
                             </TouchableOpacity>
                         </View>
-                        
+
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chipScroll}>
                             <View style={[s.chip, { backgroundColor: isDarkMode ? '#1E293B' : '#F1F5F9' }]}>
                                 <Text style={[s.chipText, { color: theme.textSecondary }]}>Civics MCQ</Text>
@@ -99,7 +108,7 @@ export default function LearningScreen() {
 
 const s = StyleSheet.create({
     container: { flex: 1 },
-    scrollContent: { 
+    scrollContent: {
         flexGrow: 1,
         paddingBottom: 40,
     },
@@ -112,7 +121,7 @@ const s = StyleSheet.create({
     pageHeader: { marginBottom: isMobile ? 20 : 35 },
     pageTitle: { fontWeight: '900', letterSpacing: -0.5 },
     pageSubtitle: { fontSize: 14, marginTop: 4, opacity: 0.8 },
-    
+
     contentCard: {
         borderRadius: 20,
         borderWidth: 1,
@@ -145,12 +154,12 @@ const s = StyleSheet.create({
     downloadBtn: { padding: 8, marginLeft: 10 },
 
     footerContainer: { marginTop: 30 },
-    footerHeader: { 
-        flexDirection: 'row', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
+    footerHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         marginBottom: 15,
-        paddingHorizontal: 4 
+        paddingHorizontal: 4
     },
     recentLabel: { fontSize: 14, fontWeight: '700' },
     chipScroll: { gap: 8 },
@@ -161,7 +170,7 @@ const s = StyleSheet.create({
     },
     chipText: { fontSize: 12, fontWeight: '700' },
     viewAllText: { fontWeight: '800', fontSize: 13 },
-    
+
     platformFooter: {
         marginTop: 60,
         textAlign: 'center',

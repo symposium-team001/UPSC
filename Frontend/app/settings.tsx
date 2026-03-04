@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-    View, 
-    Text, 
-    StyleSheet, 
-    TouchableOpacity, 
-    ScrollView, 
-    Switch, 
+import {
+    View,
+    Text,
+    StyleSheet,
+    TouchableOpacity,
+    ScrollView,
+    Switch,
     Platform,
     Alert,
     Share,
@@ -13,17 +13,18 @@ import {
     SafeAreaView
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { 
-    ChevronRight, 
-    Lock, 
-    Database, 
-    FileText, 
-    Trash2, 
-    EyeOff, 
-    Moon, 
-    Sun 
+import {
+    ChevronRight,
+    Lock,
+    Database,
+    FileText,
+    Trash2,
+    EyeOff,
+    Moon,
+    Sun,
+    ChevronLeft
 } from 'lucide-react-native';
-import { useTheme } from '@/context/ThemeContext'; 
+import { useTheme } from '@/context/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import GlobalHeader from '@/components/GlobalHeader';
@@ -54,9 +55,9 @@ export default function SettingsScreen() {
 
     // UI Component for Settings Row
     const SettingRow = ({ icon: Icon, label, sublabel, onPress, rightElement }: any) => (
-        <TouchableOpacity 
-            style={[s.row, { backgroundColor: theme.surface, borderColor: isDarkMode ? '#334155' : '#F1F5F9' }]} 
-            onPress={onPress} 
+        <TouchableOpacity
+            style={[s.row, { backgroundColor: theme.surface, borderColor: isDarkMode ? '#334155' : '#F1F5F9' }]}
+            onPress={onPress}
             disabled={!onPress}
             activeOpacity={0.7}
         >
@@ -79,22 +80,29 @@ export default function SettingsScreen() {
 
             <ScrollView contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false} bounces={false}>
                 <View style={s.mobileWrapper}>
-                    <Text style={[s.pageTitle, { color: theme.text }]}>Settings</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 25 }}>
+                        {Platform.OS === 'web' && (
+                            <TouchableOpacity onPress={() => router.back()} style={{ paddingRight: 12 }}>
+                                <ChevronLeft size={28} color={theme.text} />
+                            </TouchableOpacity>
+                        )}
+                        <Text style={[s.pageTitle, { color: theme.text, marginBottom: 0 }]}>Settings</Text>
+                    </View>
 
                     <Text style={[s.sectionHeader, { color: theme.textSecondary }]}>Security & Privacy</Text>
                     <View style={s.sectionGroup}>
-                        <SettingRow 
-                            icon={Lock} 
-                            label="Change Password" 
-                            onPress={() => router.push('/settings/changePassword')} 
+                        <SettingRow
+                            icon={Lock}
+                            label="Change Password"
+                            onPress={() => router.push('/settings/changePassword')}
                         />
-                        <SettingRow 
-                            icon={EyeOff} 
-                            label="Incognito Study Mode" 
+                        <SettingRow
+                            icon={EyeOff}
+                            label="Incognito Study Mode"
                             sublabel="Hide active status from peers"
                             rightElement={
-                                <Switch 
-                                    value={incognitoMode} 
+                                <Switch
+                                    value={incognitoMode}
                                     onValueChange={handleIncognitoToggle}
                                     trackColor={{ false: '#CBD5E1', true: '#4A767D' }}
                                     thumbColor={Platform.OS === 'ios' ? undefined : '#FFF'}
@@ -105,19 +113,19 @@ export default function SettingsScreen() {
 
                     <Text style={[s.sectionHeader, { color: theme.textSecondary }]}>Data & Legal</Text>
                     <View style={s.sectionGroup}>
-                        <SettingRow icon={Database} label="Backup Progress" onPress={() => {}} />
-                        <SettingRow icon={FileText} label="Terms of Service" onPress={() => {}} />
-                        <SettingRow icon={Trash2} label="Clear Cache" onPress={() => {}} />
+                        <SettingRow icon={Database} label="Backup Progress" onPress={() => { }} />
+                        <SettingRow icon={FileText} label="Terms of Service" onPress={() => { }} />
+                        <SettingRow icon={Trash2} label="Clear Cache" onPress={() => { }} />
                     </View>
 
                     <Text style={[s.sectionHeader, { color: theme.textSecondary }]}>Appearance</Text>
                     <View style={s.sectionGroup}>
-                        <SettingRow 
-                            icon={isDarkMode ? Moon : Sun} 
-                            label="Dark Mode" 
+                        <SettingRow
+                            icon={isDarkMode ? Moon : Sun}
+                            label="Dark Mode"
                             rightElement={
-                                <Switch 
-                                    value={isDarkMode} 
+                                <Switch
+                                    value={isDarkMode}
                                     onValueChange={toggleTheme}
                                     trackColor={{ false: '#CBD5E1', true: '#4A767D' }}
                                 />
@@ -136,28 +144,29 @@ export default function SettingsScreen() {
 
 const s = StyleSheet.create({
     container: { flex: 1 },
-    scrollContent: { paddingBottom: 40 },
+    scrollContent: { paddingBottom: 100 },
     mobileWrapper: {
-        width: isMobile ? '92%' : '100%',
-        maxWidth: 800,
+        width: '100%',
+        maxWidth: 1100,
         alignSelf: 'center',
-        paddingTop: isMobile ? 20 : 40,
+        paddingHorizontal: Platform.OS === 'web' ? '5%' : 20,
+        paddingTop: 30,
     },
-    pageTitle: { fontSize: isMobile ? 28 : 32, fontWeight: '900', marginBottom: 25 },
-    sectionHeader: { 
-        fontSize: 14, 
-        fontWeight: '800', 
-        textTransform: 'uppercase', 
+    pageTitle: { fontSize: Platform.OS === 'web' ? 36 : 28, fontWeight: '900', marginBottom: 25 },
+    sectionHeader: {
+        fontSize: 14,
+        fontWeight: '800',
+        textTransform: 'uppercase',
         letterSpacing: 1,
         marginBottom: 12,
         marginLeft: 4
     },
     sectionGroup: { marginBottom: 28, gap: 10 },
-    row: { 
-        flexDirection: 'row', 
-        alignItems: 'center', 
-        justifyContent: 'space-between', 
-        padding: 14, 
+    row: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: 14,
         borderRadius: 16,
         borderWidth: 1,
         ...Platform.select({
@@ -166,12 +175,12 @@ const s = StyleSheet.create({
         })
     },
     rowLeft: { flexDirection: 'row', alignItems: 'center', flex: 1, gap: 12 },
-    iconCircle: { 
-        width: 38, 
-        height: 38, 
-        borderRadius: 10, 
-        justifyContent: 'center', 
-        alignItems: 'center' 
+    iconCircle: {
+        width: 38,
+        height: 38,
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center'
     },
     rowLabel: { fontSize: 16, fontWeight: '700' },
     rowSublabel: { fontSize: 12, marginTop: 1, fontWeight: '500' },

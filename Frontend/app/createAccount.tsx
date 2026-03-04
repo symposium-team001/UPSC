@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  StyleSheet, 
-  SafeAreaView, 
-  KeyboardAvoidingView, 
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  KeyboardAvoidingView,
   Platform,
   ScrollView,
   Animated,
@@ -14,8 +14,8 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { User, Mail, Lock, Eye, EyeOff } from 'lucide-react-native'; 
-import { useTheme } from '../context/ThemeContext'; 
+import { User, Mail, Lock, Eye, EyeOff, ChevronLeft } from 'lucide-react-native';
+import { useTheme } from '../context/ThemeContext';
 import * as Haptics from 'expo-haptics';
 
 const { width } = Dimensions.get('window');
@@ -23,8 +23,8 @@ const isMobile = width < 450;
 
 export default function CreateAccount() {
   const router = useRouter();
-  const { theme, isDarkMode } = useTheme(); 
-  
+  const { theme, isDarkMode } = useTheme();
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(15)).current;
 
@@ -35,7 +35,7 @@ export default function CreateAccount() {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isFocused, setIsFocused] = useState<string | null>(null);
 
-  const brandColor = '#4A7C82';
+  const brandColor = theme.primary;
 
   useEffect(() => {
     Animated.parallel([
@@ -51,37 +51,42 @@ export default function CreateAccount() {
     }
     setLoading(true);
     setTimeout(() => {
-        setLoading(false);
-        router.replace('/(tabs)'); 
+      setLoading(false);
+      router.replace('/(tabs)');
     }, 1500);
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? theme.background : '#F8FAFC' }]}>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
-        <ScrollView 
-            contentContainerStyle={styles.scrollContent} 
-            keyboardShouldPersistTaps="handled" 
-            showsVerticalScrollIndicator={false}
-            bounces={false}
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          bounces={false}
         >
-          
-          <Animated.View 
+
+          <Animated.View
             style={[
-              styles.card, 
-              { 
+              styles.card,
+              {
                 backgroundColor: theme.surface,
                 opacity: fadeAnim,
                 transform: [{ translateY: slideAnim }],
                 padding: isMobile ? 24 : 45,
-                borderColor: isDarkMode ? '#333' : '#E2E8F0' 
+                borderColor: theme.border
               }
             ]}
           >
             <View style={styles.headerContainer}>
+              {Platform.OS === 'web' && (
+                <TouchableOpacity onPress={() => router.back()} style={{ position: 'absolute', left: 0, top: 0, padding: 8 }}>
+                  <ChevronLeft size={24} color={theme.text} />
+                </TouchableOpacity>
+              )}
               <Text style={[styles.title, { color: theme.text, fontSize: isMobile ? 24 : 32 }]}>
                 Create Account
               </Text>
@@ -95,12 +100,12 @@ export default function CreateAccount() {
               <View style={styles.inputGroup}>
                 <Text style={[styles.label, { color: theme.text }]}>Full Name</Text>
                 <View style={[
-                    styles.inputWrapper, 
-                    { 
-                        height: isMobile ? 50 : 56,
-                        borderColor: isFocused === 'name' ? brandColor : (isDarkMode ? '#444' : '#F1F5F9'),
-                        backgroundColor: isDarkMode ? theme.background : '#F8FAFC'
-                    }
+                  styles.inputWrapper,
+                  {
+                    height: isMobile ? 50 : 56,
+                    borderColor: isFocused === 'name' ? brandColor : theme.border,
+                    backgroundColor: theme.surfaceAlt
+                  }
                 ]}>
                   <User size={16} color={isFocused === 'name' ? brandColor : theme.textTertiary} style={styles.icon} />
                   <TextInput
@@ -118,12 +123,12 @@ export default function CreateAccount() {
               <View style={styles.inputGroup}>
                 <Text style={[styles.label, { color: theme.text }]}>Email Address</Text>
                 <View style={[
-                    styles.inputWrapper, 
-                    { 
-                        height: isMobile ? 50 : 56,
-                        borderColor: isFocused === 'email' ? brandColor : (isDarkMode ? '#444' : '#F1F5F9'),
-                        backgroundColor: isDarkMode ? theme.background : '#F8FAFC'
-                    }
+                  styles.inputWrapper,
+                  {
+                    height: isMobile ? 50 : 56,
+                    borderColor: isFocused === 'email' ? brandColor : theme.border,
+                    backgroundColor: theme.surfaceAlt
+                  }
                 ]}>
                   <Mail size={16} color={isFocused === 'email' ? brandColor : theme.textTertiary} style={styles.icon} />
                   <TextInput
@@ -143,12 +148,12 @@ export default function CreateAccount() {
               <View style={styles.inputGroup}>
                 <Text style={[styles.label, { color: theme.text }]}>Password</Text>
                 <View style={[
-                    styles.inputWrapper, 
-                    { 
-                        height: isMobile ? 50 : 56,
-                        borderColor: isFocused === 'password' ? brandColor : (isDarkMode ? '#444' : '#F1F5F9'),
-                        backgroundColor: isDarkMode ? theme.background : '#F8FAFC'
-                    }
+                  styles.inputWrapper,
+                  {
+                    height: isMobile ? 50 : 56,
+                    borderColor: isFocused === 'password' ? brandColor : theme.border,
+                    backgroundColor: theme.surfaceAlt
+                  }
                 ]}>
                   <Lock size={16} color={isFocused === 'password' ? brandColor : theme.textTertiary} style={styles.icon} />
                   <TextInput
@@ -166,8 +171,8 @@ export default function CreateAccount() {
                 </View>
               </View>
 
-              <TouchableOpacity 
-                style={[styles.signUpButton, { backgroundColor: brandColor, height: isMobile ? 50 : 56 }]} 
+              <TouchableOpacity
+                style={[styles.signUpButton, { backgroundColor: brandColor, height: isMobile ? 50 : 56 }]}
                 activeOpacity={0.8}
                 onPress={handleSignUp}
                 disabled={loading}
@@ -182,7 +187,7 @@ export default function CreateAccount() {
               </TouchableOpacity>
             </View>
           </Animated.View>
-          
+
           <Text style={[styles.copyright, { color: theme.textTertiary }]}>© 2026 Ethora Systems</Text>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -192,11 +197,11 @@ export default function CreateAccount() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scrollContent: { 
-    flexGrow: 1, 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    padding: 20 
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20
   },
   card: {
     borderRadius: isMobile ? 24 : 32,

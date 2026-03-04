@@ -1,15 +1,15 @@
 import React, { useEffect, useRef } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  Dimensions, 
-  Animated, 
-  Platform 
+import {
+    View,
+    Text,
+    StyleSheet,
+    TouchableOpacity,
+    Dimensions,
+    Animated,
+    Platform
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { GraduationCap, BarChart3, ArrowRight } from 'lucide-react-native'; 
+import { GraduationCap, BarChart3, ArrowRight } from 'lucide-react-native';
 import { useTheme } from '../context/ThemeContext';
 import * as Haptics from 'expo-haptics';
 
@@ -18,7 +18,7 @@ const isSmallDevice = width < 450; // Simple threshold for mobile vs web/tablet
 
 export default function OnboardingScreen() {
     const router = useRouter();
-    const { theme } = useTheme();
+    const { theme, isDarkMode } = useTheme();
     const slideUp = useRef(new Animated.Value(30)).current;
     const fade = useRef(new Animated.Value(0)).current;
 
@@ -44,41 +44,41 @@ export default function OnboardingScreen() {
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: '#F8FAFC' }]}>
+        <View style={[styles.container, { backgroundColor: theme.background }]}>
             <Animated.View style={[
-                styles.content, 
+                styles.content,
                 { opacity: fade, transform: [{ translateY: slideUp }] }
             ]}>
-                
+
                 {/* Scalable Icon Wrapper */}
                 <View style={styles.iconWrapper}>
                     <View style={[styles.iconCircle, { backgroundColor: theme.primary, opacity: 0.1 }]} />
-                    <GraduationCap 
-                        size={isSmallDevice ? 80 : 100} 
-                        color={theme.primary} 
-                        strokeWidth={1.2} 
+                    <GraduationCap
+                        size={isSmallDevice ? 80 : 100}
+                        color={theme.primary}
+                        strokeWidth={1.2}
                     />
-                    
-                    <View style={[styles.accentIcon, { backgroundColor: '#FFFFFF', borderColor: '#E2E8F0', borderWidth: 1 }]}>
-                         <BarChart3 size={isSmallDevice ? 22 : 28} color={theme.primary} strokeWidth={2} />
+
+                    <View style={[styles.accentIcon, { backgroundColor: theme.surfaceAlt, borderColor: theme.border, borderWidth: 1 }]}>
+                        <BarChart3 size={isSmallDevice ? 22 : 28} color={theme.primary} strokeWidth={2} />
                     </View>
                 </View>
 
                 {/* Responsive Typography */}
-                <Text style={[styles.title, { color: '#0F172A' }]}>
+                <Text style={[styles.title, { color: theme.text }]}>
                     {getGreeting()}
                 </Text>
-                
+
                 <Text style={styles.quote}>
                     "The best way to predict your UPSC result is to create it."
                 </Text>
 
-                <Text style={styles.description}>
+                <Text style={[styles.description, { color: theme.textSecondary }]}>
                     Ethora is your personal mentor, ready to guide your journey to LBSNAA.
                 </Text>
 
-                <TouchableOpacity 
-                    style={[styles.button, { backgroundColor: '#4A767D' }]} 
+                <TouchableOpacity
+                    style={[styles.button, { backgroundColor: theme.primary }]}
                     activeOpacity={0.9}
                     onPress={handleStart}
                 >
@@ -100,37 +100,37 @@ export default function OnboardingScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: { 
-        flex: 1, 
-        alignItems: 'center', 
+    container: {
+        flex: 1,
+        alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 20 
+        paddingVertical: 20
     },
-    content: { 
-        alignItems: 'center', 
-        paddingHorizontal: isSmallDevice ? 25 : 40, 
+    content: {
+        alignItems: 'center',
+        paddingHorizontal: isSmallDevice ? 25 : 40,
         width: '100%',
         maxWidth: 800, // Keeps web view from getting too wide
     },
-    iconWrapper: { 
-        width: isSmallDevice ? 150 : 200, 
-        height: isSmallDevice ? 150 : 200, 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        marginBottom: isSmallDevice ? 20 : 40 
+    iconWrapper: {
+        width: isSmallDevice ? 150 : 200,
+        height: isSmallDevice ? 150 : 200,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: isSmallDevice ? 20 : 40
     },
-    iconCircle: { 
-        position: 'absolute', 
-        width: isSmallDevice ? 120 : 160, 
-        height: isSmallDevice ? 120 : 160, 
-        borderRadius: 80 
+    iconCircle: {
+        position: 'absolute',
+        width: isSmallDevice ? 120 : 160,
+        height: isSmallDevice ? 120 : 160,
+        borderRadius: 80
     },
-    accentIcon: { 
-        position: 'absolute', 
-        bottom: isSmallDevice ? 10 : 20, 
-        right: isSmallDevice ? 10 : 20, 
-        padding: isSmallDevice ? 8 : 12, 
-        borderRadius: 12, 
+    accentIcon: {
+        position: 'absolute',
+        bottom: isSmallDevice ? 10 : 20,
+        right: isSmallDevice ? 10 : 20,
+        padding: isSmallDevice ? 8 : 12,
+        borderRadius: 12,
         backgroundColor: '#fff',
         ...Platform.select({
             ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 10 },
@@ -138,38 +138,37 @@ const styles = StyleSheet.create({
             web: { boxShadow: '0px 4px 10px rgba(0,0,0,0.1)' }
         })
     },
-    title: { 
+    title: {
         fontSize: isSmallDevice ? 28 : 42, // Significantly smaller on mobile
-        fontWeight: '900', 
-        marginBottom: 10, 
-        textAlign: 'center', 
-        letterSpacing: -0.5 
+        fontWeight: '900',
+        marginBottom: 10,
+        textAlign: 'center',
+        letterSpacing: -0.5
     },
-    quote: { 
-        fontSize: isSmallDevice ? 14 : 18, 
-        color: '#4A767D', 
-        fontStyle: 'italic', 
-        fontWeight: '600', 
-        marginBottom: 20, 
+    quote: {
+        fontSize: isSmallDevice ? 14 : 18,
+        color: '#4A767D',
+        fontStyle: 'italic',
+        fontWeight: '600',
+        marginBottom: 20,
         textAlign: 'center',
         paddingHorizontal: 10
     },
-    description: { 
-        fontSize: isSmallDevice ? 14 : 16, 
-        textAlign: 'center', 
-        lineHeight: isSmallDevice ? 22 : 26, 
-        color: '#64748B', 
-        marginBottom: isSmallDevice ? 40 : 60, 
-        maxWidth: 500 
+    description: {
+        fontSize: isSmallDevice ? 14 : 16,
+        textAlign: 'center',
+        lineHeight: isSmallDevice ? 22 : 26,
+        marginBottom: isSmallDevice ? 40 : 60,
+        maxWidth: 500
     },
-    button: { 
-        flexDirection: 'row', 
-        paddingVertical: isSmallDevice ? 16 : 20, 
+    button: {
+        flexDirection: 'row',
+        paddingVertical: isSmallDevice ? 16 : 20,
         paddingHorizontal: isSmallDevice ? 30 : 40,
-        borderRadius: 12, 
+        borderRadius: 12,
         width: isSmallDevice ? '100%' : 'auto', // Full width button on mobile
-        alignItems: 'center', 
-        justifyContent: 'center', 
+        alignItems: 'center',
+        justifyContent: 'center',
         ...Platform.select({
             ios: { shadowColor: '#4A767D', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 10 },
             android: { elevation: 4 },
@@ -177,13 +176,13 @@ const styles = StyleSheet.create({
         })
     },
     buttonText: { fontSize: 18, fontWeight: '800', color: '#FFF' },
-    footerLinks: { 
-        flexDirection: 'row', 
+    footerLinks: {
+        flexDirection: 'row',
         flexWrap: 'wrap', // Allows labels to wrap on thin screens
         justifyContent: 'center',
-        alignItems: 'center', 
-        marginTop: isSmallDevice ? 40 : 80, 
-        gap: isSmallDevice ? 10 : 15 
+        alignItems: 'center',
+        marginTop: isSmallDevice ? 40 : 80,
+        gap: isSmallDevice ? 10 : 15
     },
     footerLabel: { fontSize: 9, fontWeight: '800', color: '#94A3B8', letterSpacing: 0.5 },
     dot: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#CBD5E1' }
