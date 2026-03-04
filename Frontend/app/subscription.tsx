@@ -1,156 +1,200 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, Alert, Platform, StatusBar } from 'react-native';
+import {
+    View,
+    Text,
+    StyleSheet,
+    TouchableOpacity,
+    ScrollView,
+    Dimensions,
+    Platform,
+    Alert,
+    SafeAreaView
+} from 'react-native';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, Check, Zap, Infinity, Map, Globe } from 'lucide-react-native';
+import { Check, ArrowRight, Zap, ChevronLeft } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
+import GlobalHeader from '@/components/GlobalHeader';
+
+const { width } = Dimensions.get('window');
+const isMobile = width < 450;
 
 const PLANS = [
-    { id: 'monthly', title: 'Monthly', price: 299, perMonth: 299, savings: null },
-    { id: 'quarterly', title: 'Quarterly', price: 699, perMonth: 233, savings: 'Save 20%' },
-    { id: 'annual', title: 'Yearly', price: 1999, perMonth: 166, savings: 'Save 45%' },
+    { id: 'monthly', title: 'MONTHLY', price: 299, period: '/ mo', note: 'Basic access to AI tools.', savings: null },
+    { id: 'quarterly', title: 'QUARTERLY', price: 699, period: '/ qu', note: 'Serious analysis for students.', savings: 'SAVE 22%', popular: true },
+    { id: 'annual', title: 'YEARLY', price: 1999, period: '/ yr', note: 'Long-term strategic growth.', savings: 'SAVE 44%' },
 ];
 
 export default function SubscriptionScreen() {
-    const { theme } = useTheme();
+    const { theme, isDarkMode } = useTheme();
     const router = useRouter();
-    
-    // Track which plan is selected
-    const [selectedId, setSelectedId] = useState('annual');
+    const [selectedId, setSelectedId] = useState('quarterly');
+    const primaryTeal = '#4A767D';
 
-    // Get the current active plan details
-    const currentPlan = PLANS.find(p => p.id === selectedId) || PLANS[2];
-
-    const handleUpgrade = () => {
-        const paymentData = {
-            planId: currentPlan.id,
-            amount: currentPlan.price,
-            currency: 'INR'
-        };
-        
-        console.log("Initiating Payment:", paymentData);
-        
+    const handleUpgrade = (plan: any) => {
         Alert.alert(
-            "Ethora Pro",
-            `Proceed to pay ₹${currentPlan.price} for the ${currentPlan.title} plan?`,
-            [
-                { text: "Cancel", style: "cancel" },
-                { text: "Pay Now", onPress: () => console.log("Integrating Gateway...") }
-            ]
+            "Confirm Upgrade",
+            `Subscribe to ${plan.title} for ₹${plan.price}?`,
+            [{ text: "Cancel", style: "cancel" }, { text: "Proceed", onPress: () => console.log("Init Payment") }]
         );
     };
 
     return (
-        <SafeAreaView style={[s.container, { backgroundColor: theme.background }]}>
-            {/* Header with fixed StatusBar height logic */}
-            <View style={s.header}>
-                <TouchableOpacity 
-                    onPress={() => router.push('/profile')} 
-                    style={[s.backBtn, { backgroundColor: theme.surface }]}
-                >
-                    <ChevronLeft size={24} color={theme.text} />
-                </TouchableOpacity>
-            </View>
+        <SafeAreaView style={[s.container, { backgroundColor: isDarkMode ? '#0F172A' : '#F9FBFC' }]}>
+            <GlobalHeader />
 
-            <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
-                <Animated.View entering={FadeInDown.duration(600)}>
-                    <Text style={[s.title, { color: theme.text }]}>Unlock your Ethora{"\n"}Analyst superpowers</Text>
-                </Animated.View>
+            <ScrollView contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false} bounces={false}>
+                <View style={s.mobileWrapper}>
 
-                {/* Features List */}
-                <Animated.View entering={FadeInDown.delay(200).duration(600)} style={[s.perksBox, { backgroundColor: theme.surface }]}>
-                    <FeatureRow icon={<Infinity size={22} color={theme.text} />} title="Unlimited AI Evaluation" sub="Evaluate Mains answers without limits" theme={theme} />
-                    <FeatureRow icon={<Map size={22} color={theme.text} />} title="GS Mapping & Analysis" sub="Interactive mapping for Geography & IR" theme={theme} />
-                    <FeatureRow icon={<Globe size={22} color={theme.text} />} title="Daily Editorial Insights" sub="Unlock specialized UPSC perspectives" theme={theme} />
-                    <FeatureRow icon={<Zap size={22} color={theme.text} />} title="Priority Processing" sub="Get your feedback in under 2 minutes" theme={theme} />
-                </Animated.View>
+                    {/* Header Section */}
+                    <Animated.View entering={FadeInDown.duration(600)} style={s.headerSection}>
+                        {Platform.OS === 'web' && (
+                            <TouchableOpacity onPress={() => router.back()} style={{ position: 'absolute', left: 0, top: 0, padding: 8 }}>
+                                <ChevronLeft size={24} color={theme.text} />
+                            </TouchableOpacity>
+                        )}
+                        <Zap size={32} color={primaryTeal} style={{ marginBottom: 15 }} />
+                        <Text style={[s.mainTitle, { color: theme.text, fontSize: isMobile ? 32 : 44 }]}>
+                            Unlock Ethora Pro
+                        </Text>
+                        <Text style={[s.mainSubtitle, { color: theme.textSecondary }]}>
+                            Choose the plan that fits your goals
+                        </Text>
+                    </Animated.View>
 
-                {/* Horizontal Plan Selector */}
-                <View style={s.planContainer}>
-                    {PLANS.map((plan) => (
-                        <TouchableOpacity 
-                            key={plan.id}
-                            onPress={() => setSelectedId(plan.id)}
-                            style={[
-                                s.planCard, 
-                                { 
-                                    backgroundColor: theme.surface, 
-                                    borderColor: selectedId === plan.id ? theme.primary : 'transparent',
-                                    borderWidth: 2 
-                                }
-                            ]}
+                    {/* Perks Box */}
+                    <Animated.View entering={FadeInDown.delay(200)} style={[s.perksBox, { backgroundColor: theme.surface, borderColor: isDarkMode ? '#334155' : '#E2E8F0' }]}>
+                        <FeatureItem title="Unlimited AI Evaluation" theme={theme} />
+                        <FeatureItem title="GS Mapping & Analysis" theme={theme} />
+                        <FeatureItem title="Daily Editorial Insights" theme={theme} />
+                        <FeatureItem title="Priority Processing" theme={theme} />
+                    </Animated.View>
+
+                    {/* Pricing Cards Stack */}
+                    <View style={s.pricingStack}>
+                        {PLANS.map((plan, index) => {
+                            const isSelected = selectedId === plan.id;
+                            return (
+                                <Animated.View
+                                    key={plan.id}
+                                    entering={FadeInDown.delay(300 + (index * 100))}
+                                    style={[
+                                        s.planCard,
+                                        { backgroundColor: theme.surface, borderColor: isSelected ? primaryTeal : (isDarkMode ? '#334155' : '#E2E8F0') },
+                                        isSelected && { borderWidth: 2, transform: [{ scale: 1.02 }] }
+                                    ]}
+                                >
+                                    <TouchableOpacity activeOpacity={0.9} onPress={() => setSelectedId(plan.id)}>
+                                        <View style={s.cardHeader}>
+                                            <Text style={[s.planType, { color: isSelected ? primaryTeal : theme.textTertiary }]}>{plan.title}</Text>
+                                            {plan.savings && (
+                                                <View style={s.savingsTag}>
+                                                    <Text style={s.savingsTagText}>{plan.savings}</Text>
+                                                </View>
+                                            )}
+                                        </View>
+
+                                        <View style={s.priceRow}>
+                                            <Text style={[s.currency, { color: theme.text }]}>₹</Text>
+                                            <Text style={[s.priceAmount, { color: theme.text }]}>{plan.price}</Text>
+                                            <Text style={[s.pricePeriod, { color: theme.textSecondary }]}>{plan.period}</Text>
+                                        </View>
+
+                                        <Text style={[s.planNote, { color: theme.textSecondary }]}>{plan.note}</Text>
+                                    </TouchableOpacity>
+                                </Animated.View>
+                            );
+                        })}
+                    </View>
+
+                    {/* Sticky-style Bottom Button */}
+                    <View style={s.actionContainer}>
+                        <TouchableOpacity
+                            style={[s.bigActionBtn, { backgroundColor: primaryTeal }]}
+                            onPress={() => handleUpgrade(PLANS.find(p => p.id === selectedId))}
                         >
-                            {plan.savings && (
-                                <View style={s.savingsBadge}>
-                                    <Text style={s.savingsText}>{plan.savings}</Text>
-                                </View>
-                            )}
-                            <Text style={[s.planTitle, { color: theme.textSecondary }]}>{plan.title}</Text>
-                            <Text style={[s.planPrice, { color: theme.text }]}>₹{plan.price}</Text>
-                            <Text style={[s.planSub, { color: theme.textSecondary }]}>₹{plan.perMonth}/mo</Text>
+                            <Text style={s.bigActionText}>Subscribe Now</Text>
+                            <ArrowRight size={20} color="#FFF" style={{ marginLeft: 10 }} />
                         </TouchableOpacity>
-                    ))}
-                </View>
+                        <Text style={s.renewNote}>Cancel anytime. Auto-renews monthly.</Text>
+                    </View>
 
-                {/* Terms and Pricing Detail */}
-                <Text style={[s.billingNote, { color: theme.textSecondary }]}>
-                    ₹{currentPlan.perMonth} per month billed {currentPlan.title.toLowerCase()}.{"\n"}
-                    Auto-renews unless canceled. Secure UPI Payment.
-                </Text>
-
-                {/* Premium Action Button */}
-                <TouchableOpacity style={[s.actionBtn, { backgroundColor: theme.primary }]} onPress={handleUpgrade}>
-                    <Text style={s.actionBtnText}>Get Ethora {currentPlan.title}</Text>
-                </TouchableOpacity>
-
-                <View style={s.footerLinks}>
-                    <Text style={s.footerText}>Terms of Service</Text>
-                    <Text style={s.footerText}>Privacy Policy</Text>
-                    <Text style={s.footerText}>Restore</Text>
+                    {/* Footer Links */}
+                    <View style={s.footer}>
+                        <Text style={s.footerLink}>Terms</Text>
+                        <Text style={s.footerLink}>Privacy</Text>
+                        <Text style={s.footerLink}>Restore</Text>
+                    </View>
                 </View>
             </ScrollView>
         </SafeAreaView>
     );
 }
 
-const FeatureRow = ({ icon, title, sub, theme }: any) => (
-    <View style={s.featureRow}>
-        <View style={s.iconCircle}>{icon}</View>
-        <View style={{ flex: 1 }}>
-            <Text style={[s.featureTitle, { color: theme.text }]}>{title}</Text>
-            <Text style={[s.featureSub, { color: theme.textSecondary }]}>{sub}</Text>
-        </View>
-        <View style={s.checkCircle}><Check size={14} color="#FFF" /></View>
+const FeatureItem = ({ title, theme }: { title: string, theme: any }) => (
+    <View style={s.perkItem}>
+        <Check size={16} color="#4A767D" style={{ marginRight: 12 }} />
+        <Text style={[s.perkTitle, { color: theme.textSecondary }]}>{title}</Text>
     </View>
 );
 
 const s = StyleSheet.create({
     container: { flex: 1 },
-    header: { 
-        paddingHorizontal: 20, 
-        // FIX: Added || 0 to handle the TypeScript 'possibly undefined' error
-        paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 20 : 25, 
-        paddingBottom: 10 
+    scrollContent: { paddingBottom: 60 },
+    mobileWrapper: {
+        width: isMobile ? '92%' : '100%',
+        maxWidth: 800,
+        alignSelf: 'center',
+        paddingTop: isMobile ? 20 : 50
     },
-    backBtn: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', elevation: 2 },
-    content: { paddingHorizontal: 25, paddingTop: 15, paddingBottom: 40 },
-    title: { fontSize: 26, fontWeight: '800', textAlign: 'center', marginBottom: 30, lineHeight: 34 },
-    perksBox: { borderRadius: 24, padding: 20, marginBottom: 30 },
-    featureRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
-    iconCircle: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center', marginRight: 15 },
-    featureTitle: { fontSize: 16, fontWeight: '700' },
-    featureSub: { fontSize: 13, opacity: 0.7 },
-    checkCircle: { width: 22, height: 22, borderRadius: 11, backgroundColor: '#10B981', justifyContent: 'center', alignItems: 'center' },
-    planContainer: { flexDirection: 'row', gap: 10, marginBottom: 20 },
-    planCard: { flex: 1, padding: 15, borderRadius: 20, position: 'relative' },
-    savingsBadge: { position: 'absolute', top: -12, left: 10, backgroundColor: '#F59E0B', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, zIndex: 1 },
-    savingsText: { color: '#FFF', fontSize: 10, fontWeight: '900' },
-    planTitle: { fontSize: 12, fontWeight: '700', marginBottom: 5 },
-    planPrice: { fontSize: 20, fontWeight: '800' },
-    planSub: { fontSize: 11, opacity: 0.6 },
-    billingNote: { textAlign: 'center', fontSize: 12, lineHeight: 18, marginBottom: 30, paddingHorizontal: 10 },
-    actionBtn: { height: 60, borderRadius: 30, justifyContent: 'center', alignItems: 'center' },
-    actionBtnText: { color: '#FFF', fontSize: 18, fontWeight: '800' },
-    footerLinks: { flexDirection: 'row', justifyContent: 'center', gap: 15, marginTop: 25 },
-    footerText: { fontSize: 12, color: '#64748B', textDecorationLine: 'underline' }
+    headerSection: { alignItems: 'center', marginBottom: 30 },
+    mainTitle: { fontWeight: '900', textAlign: 'center', letterSpacing: -1 },
+    mainSubtitle: { fontSize: 15, marginTop: 8, opacity: 0.8, textAlign: 'center' },
+
+    perksBox: {
+        borderRadius: 20,
+        padding: 20,
+        borderWidth: 1,
+        marginBottom: 30,
+        flexDirection: 'column',
+        gap: 12
+    },
+    perkItem: { flexDirection: 'row', alignItems: 'center' },
+    perkTitle: { fontSize: 14, fontWeight: '600' },
+
+    pricingStack: { gap: 16, marginBottom: 40 },
+    planCard: {
+        padding: 24,
+        borderRadius: 20,
+        borderWidth: 1,
+    },
+    cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+    planType: { fontSize: 12, fontWeight: '900', letterSpacing: 1 },
+    savingsTag: { backgroundColor: '#D1FAE5', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+    savingsTagText: { color: '#059669', fontSize: 10, fontWeight: '900' },
+
+    priceRow: { flexDirection: 'row', alignItems: 'baseline', marginBottom: 10 },
+    currency: { fontSize: 20, fontWeight: '700', marginRight: 2 },
+    priceAmount: { fontSize: 36, fontWeight: '900' },
+    pricePeriod: { fontSize: 14, marginLeft: 4, opacity: 0.6 },
+    planNote: { fontSize: 13, lineHeight: 18 },
+
+    actionContainer: { marginTop: 10 },
+    bigActionBtn: {
+        height: 60,
+        borderRadius: 16,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: '100%',
+        ...Platform.select({
+            ios: { shadowColor: '#4A767D', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 15 },
+            android: { elevation: 6 }
+        })
+    },
+    bigActionText: { color: '#FFF', fontSize: 18, fontWeight: '800' },
+    renewNote: { textAlign: 'center', marginTop: 15, fontSize: 12, color: '#94A3B8' },
+
+    footer: { flexDirection: 'row', justifyContent: 'center', gap: 25, marginTop: 40, opacity: 0.5 },
+    footerLink: { fontSize: 12, fontWeight: '600' }
 });

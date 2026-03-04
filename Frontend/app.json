@@ -7,9 +7,11 @@
     "icon": "./assets/images/icon.png",
     "scheme": "rork-app",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "splash": {
+<<<<<<< HEAD
       "image": "./assets/images/splash-icon.png",
+=======
+>>>>>>> main
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -19,6 +21,7 @@
     },
     "android": {
       "adaptiveIcon": {
+<<<<<<< HEAD
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
@@ -39,6 +42,11 @@
     ],
     "experiments": {
       "typedRoutes": true
+=======
+        "backgroundColor": "#ffffff"
+      },
+      "package": "app.rork.superkalam_clone_frontend"
+>>>>>>> main
     }
   }
 }
