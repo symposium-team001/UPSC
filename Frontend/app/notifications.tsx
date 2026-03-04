@@ -6,154 +6,189 @@ import {
     TouchableOpacity, 
     ScrollView, 
     Switch, 
-    Platform 
+    Platform,
+    Dimensions,
+    SafeAreaView
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, Bell, BookOpen, MessageSquare, Trophy, Zap } from 'lucide-react-native';
+import { Bell, BookOpen, MessageSquare, Trophy, Zap, Info, ChevronLeft } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import GlobalHeader from '@/components/GlobalHeader';
+
+const { width } = Dimensions.get('window');
+const isMobile = width < 450;
 
 export default function NotificationsScreen() {
     const router = useRouter();
     const { theme, isDarkMode } = useTheme();
 
-    // Master switch and granular switches
-    const [isEnabled, setIsEnabled] = useState(true);
-    const [settings, setSettings] = useState({
-        quizzes: true,
-        mentorship: true,
-        community: false,
-        achievements: true,
-    });
+    const [pushEnabled, setPushEnabled] = useState(true);
+    const [dailyMocks, setDailyMocks] = useState(true);
+    const [studyReminders, setStudyReminders] = useState(true);
+    const [doubtDiscussions, setDoubtDiscussions] = useState(false);
+    const [milestones, setMilestones] = useState(true);
 
-    const toggleSetting = (key: keyof typeof settings) => {
-        setSettings(prev => ({ ...prev, [key]: !prev[key] }));
-    };
+    const primaryTeal = '#4A767D';
 
-    const SettingRow = ({ icon: Icon, title, subtitle, value, onToggle, color }: any) => (
-        <View style={[styles.row, { borderBottomColor: theme.border, opacity: isEnabled ? 1 : 0.5 }]}>
-            <View style={styles.rowLeft}>
-                <View style={[styles.iconBox, { backgroundColor: `${color}15` }]}>
-                    <Icon size={22} color={color} />
+    const SettingCard = ({ icon: Icon, title, subtitle, value, onToggle }: any) => (
+        <View style={[s.sectionCard, { backgroundColor: theme.surface, padding: isMobile ? 16 : 24 }]}>
+            <View style={s.cardInner}>
+                <View style={[s.iconBg, { backgroundColor: isDarkMode ? '#1E293B' : '#F1F5F9' }]}>
+                    <Icon size={isMobile ? 18 : 20} color={primaryTeal} />
                 </View>
-                <View style={styles.textContainer}>
-                    <Text style={[styles.rowTitle, { color: theme.text }]}>{title}</Text>
-                    <Text style={[styles.rowSubtitle, { color: theme.textSecondary }]}>{subtitle}</Text>
+                <View style={s.textSide}>
+                    <Text style={[s.cardTitle, { color: theme.text, fontSize: isMobile ? 15 : 16 }]}>{title}</Text>
+                    <Text style={[s.cardSubtitle, { color: theme.textSecondary, fontSize: isMobile ? 12 : 14 }]}>{subtitle}</Text>
                 </View>
+                <Switch
+                    value={value}
+                    onValueChange={onToggle}
+                    trackColor={{ false: '#CBD5E1', true: primaryTeal }}
+                    thumbColor="#FFFFFF"
+                    style={Platform.OS === 'ios' ? { transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] } : {}}
+                />
             </View>
-            <Switch
-                value={value}
-                onValueChange={onToggle}
-                disabled={!isEnabled}
-                trackColor={{ false: '#CBD5E1', true: theme.primary }}
-                thumbColor={Platform.OS === 'android' ? '#FFFFFF' : ''}
-            />
         </View>
     );
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.background }]}>
-            <SafeAreaView edges={['top']} style={{ backgroundColor: theme.surface }}>
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                        <ChevronLeft size={28} color={theme.primary} />
-                    </TouchableOpacity>
-                    <Text style={[styles.headerTitle, { color: theme.text }]}>Notifications</Text>
-                    <View style={{ width: 40 }} />
-                </View>
-            </SafeAreaView>
+        <SafeAreaView style={[s.container, { backgroundColor: isDarkMode ? '#0F172A' : '#F9FBFC' }]}>
+            <GlobalHeader />
 
-            <ScrollView contentContainerStyle={styles.scrollBody} showsVerticalScrollIndicator={false}>
-                
-                {/* MASTER SWITCH CARD */}
-                <View style={[styles.masterCard, { backgroundColor: theme.primary + '10', borderColor: theme.primary + '30' }]}>
-                    <View style={styles.masterLeft}>
-                        <Zap size={24} color={theme.primary} />
-                        <View style={{ marginLeft: 12 }}>
-                            <Text style={[styles.masterTitle, { color: theme.text }]}>Push Notifications</Text>
-                            <Text style={[styles.masterSub, { color: theme.textSecondary }]}>Enable or disable all alerts</Text>
+            <ScrollView 
+                contentContainerStyle={s.scrollContent} 
+                showsVerticalScrollIndicator={false}
+                bounces={false}
+            >
+                <View style={s.mobileCenterWrapper}>
+                    {/* Header Row */}
+                    <View style={s.headerRow}>
+                        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
+                            <ChevronLeft size={isMobile ? 24 : 28} color={theme.text} />
+                        </TouchableOpacity>
+                        <View style={s.titleContainer}>
+                            <Text style={[s.title, { color: theme.text, fontSize: isMobile ? 28 : 36 }]}>Notifications</Text>
+                            <Text style={[s.subtitle, { color: theme.textSecondary }]}>
+                                Manage your updates and alerts.
+                            </Text>
                         </View>
                     </View>
-                    <Switch
-                        value={isEnabled}
-                        onValueChange={setIsEnabled}
-                        trackColor={{ false: '#CBD5E1', true: theme.primary }}
-                    />
-                </View>
 
-                <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>Activity Preferences</Text>
-                
-                <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-                    <SettingRow 
-                        icon={Bell} 
-                        title="Daily Mock Tests" 
-                        subtitle="Alerts when your daily quiz is ready"
-                        color="#F59E0B"
-                        value={settings.quizzes}
-                        onToggle={() => toggleSetting('quizzes')}
-                    />
-                    <SettingRow 
-                        icon={BookOpen} 
-                        title="Study Reminders" 
-                        subtitle="Follow up on your study schedule"
-                        color={theme.primary}
-                        value={settings.mentorship}
-                        onToggle={() => toggleSetting('mentorship')}
-                    />
-                    <SettingRow 
-                        icon={MessageSquare} 
-                        title="Doubt Discussions" 
-                        subtitle="Replies to your community posts"
-                        color="#10B981"
-                        value={settings.community}
-                        onToggle={() => toggleSetting('community')}
-                    />
-                    <SettingRow 
-                        icon={Trophy} 
-                        title="Milestones" 
-                        subtitle="Badges and streak updates"
-                        color="#818CF8"
-                        value={settings.achievements}
-                        onToggle={() => toggleSetting('achievements')}
-                    />
-                </View>
+                    {/* Section: Push */}
+                    <View style={s.groupHeader}>
+                        <Zap size={14} color={primaryTeal} />
+                        <Text style={[s.groupTitle, { color: primaryTeal }]}>PUSH NOTIFICATIONS</Text>
+                    </View>
 
-                <View style={styles.footer}>
-                    <Text style={[styles.footerText, { color: theme.textTertiary }]}>
-                        You can also manage system notifications in your phone's device settings.
-                    </Text>
+                    <View style={[s.sectionCard, { backgroundColor: theme.surface, padding: isMobile ? 16 : 24 }]}>
+                        <View style={s.cardInner}>
+                            <View style={s.textSide}>
+                                <Text style={[s.cardTitle, { color: theme.text, fontSize: isMobile ? 15 : 16 }]}>Enable Push Notifications</Text>
+                                <Text style={[s.cardSubtitle, { color: theme.textSecondary, fontSize: isMobile ? 12 : 14 }]}>
+                                    Real-time browser and app alerts
+                                </Text>
+                            </View>
+                            <Switch
+                                value={pushEnabled}
+                                onValueChange={setPushEnabled}
+                                trackColor={{ false: '#CBD5E1', true: primaryTeal }}
+                                thumbColor="#FFFFFF"
+                                style={Platform.OS === 'ios' ? { transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] } : {}}
+                            />
+                        </View>
+                    </View>
+
+                    {/* Section: Activity */}
+                    <View style={s.groupHeader}>
+                        <Bell size={14} color={primaryTeal} />
+                        <Text style={[s.groupTitle, { color: primaryTeal }]}>ACTIVITY PREFERENCES</Text>
+                    </View>
+
+                    <SettingCard icon={Bell} title="Daily Mock Tests" subtitle="New daily mocks alerts" value={dailyMocks} onToggle={setDailyMocks} />
+                    <SettingCard icon={BookOpen} title="Study Reminders" subtitle="Personalized schedule nudges" value={studyReminders} onToggle={setStudyReminders} />
+                    <SettingCard icon={MessageSquare} title="Doubt Discussions" subtitle="Replies to your queries" value={doubtDiscussions} onToggle={setDoubtDiscussions} />
+                    <SettingCard icon={Trophy} title="Milestones" subtitle="Celebrations and certificates" value={milestones} onToggle={setMilestones} />
+
+                    {/* Save Button */}
+                    <TouchableOpacity 
+                        style={[s.saveBtn, { backgroundColor: primaryTeal, height: isMobile ? 50 : 56 }]}
+                        onPress={() => router.back()}
+                    >
+                        <Text style={s.saveBtnText}>Save Preferences</Text>
+                    </TouchableOpacity>
+
+                    {/* Info Box */}
+                    <View style={[s.infoBox, { backgroundColor: isDarkMode ? '#1E293B' : '#EFF6F7' }]}>
+                        <Info size={16} color={primaryTeal} style={{ marginRight: 10 }} />
+                        <Text style={[s.infoText, { color: theme.textSecondary }]}>
+                            Settings are synced across devices. System settings may override these.
+                        </Text>
+                    </View>
                 </View>
             </ScrollView>
-        </View>
+        </SafeAreaView>
     );
 }
 
-const styles = StyleSheet.create({
+const s = StyleSheet.create({
     container: { flex: 1 },
-    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 },
-    headerTitle: { fontSize: 18, fontWeight: '800' },
-    backBtn: { padding: 4 },
-    scrollBody: { padding: 20 },
-    masterCard: { 
+    scrollContent: { 
+        flexGrow: 1,
+        paddingBottom: 40,
+    },
+    mobileCenterWrapper: {
+        width: isMobile ? '92%' : '100%',
+        maxWidth: 600,
+        alignSelf: 'center',
+        paddingTop: isMobile ? 20 : 40,
+    },
+    headerRow: { 
+        flexDirection: 'row', 
+        alignItems: 'flex-start', 
+        marginBottom: isMobile ? 25 : 40,
+        gap: 10
+    },
+    backBtn: { marginTop: 4, padding: 4 },
+    titleContainer: { flex: 1 },
+    title: { fontWeight: '900', letterSpacing: -0.5 },
+    subtitle: { fontSize: 14, marginTop: 4, opacity: 0.7 },
+
+    groupHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12, gap: 8, marginLeft: 4 },
+    groupTitle: { fontSize: 11, fontWeight: '800', letterSpacing: 1 },
+
+    sectionCard: { 
+        borderRadius: 16, 
+        marginBottom: 12, 
+        borderWidth: 1, 
+        borderColor: '#E2E8F0',
+        ...Platform.select({
+            ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.03, shadowRadius: 8 },
+            android: { elevation: 2 },
+        })
+    },
+    cardInner: { flexDirection: 'row', alignItems: 'center' },
+    iconBg: { width: 38, height: 38, borderRadius: 10, justifyContent: 'center', alignItems: 'center', marginRight: 15 },
+    textSide: { flex: 1, paddingRight: 10 },
+    cardTitle: { fontWeight: '700', marginBottom: 2 },
+    cardSubtitle: { lineHeight: 18 },
+
+    saveBtn: { 
+        width: '100%',
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 20,
+        marginBottom: 25
+    },
+    saveBtnText: { color: 'white', fontSize: 16, fontWeight: '800' },
+
+    infoBox: { 
         flexDirection: 'row', 
         alignItems: 'center', 
-        justifyContent: 'space-between', 
-        padding: 20, 
-        borderRadius: 24, 
+        padding: 16, 
+        borderRadius: 12, 
         borderWidth: 1, 
-        marginBottom: 25 
+        borderColor: '#D1E2E4',
     },
-    masterLeft: { flexDirection: 'row', alignItems: 'center' },
-    masterTitle: { fontSize: 16, fontWeight: '700' },
-    masterSub: { fontSize: 12, marginTop: 2 },
-    sectionLabel: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 12, marginLeft: 4 },
-    card: { borderRadius: 24, borderWidth: 1, overflow: 'hidden' },
-    row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 18, borderBottomWidth: 1 },
-    rowLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
-    iconBox: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginRight: 15 },
-    textContainer: { flex: 1, paddingRight: 10 },
-    rowTitle: { fontSize: 15, fontWeight: '700', marginBottom: 2 },
-    rowSubtitle: { fontSize: 12, lineHeight: 18 },
-    footer: { marginTop: 20, paddingHorizontal: 20 },
-    footerText: { textAlign: 'center', fontSize: 12, lineHeight: 18 }
+    infoText: { flex: 1, fontSize: 12, lineHeight: 16 }
 });

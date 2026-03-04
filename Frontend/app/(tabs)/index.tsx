@@ -1,259 +1,443 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from "react";
 import {
-    View, Text, StyleSheet, ScrollView, TouchableOpacity,
-    Animated, Dimensions, Platform, StatusBar
-} from 'react-native';
-import { RefreshCcw, Zap, Globe, Volume2, VolumeX } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
-import * as Speech from 'expo-speech';
-import { useTheme } from '../../context/ThemeContext';
-import { router } from 'expo-router';
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Animated,
+  Platform,
+  Image,
+  Dimensions,
+} from "react-native";
+import {
+  ChevronRight,
+  Newspaper,
+  PlayCircle,
+  Clock,
+} from "lucide-react-native";
+import * as Speech from "expo-speech";
+import { useTheme } from "../../context/ThemeContext";
+import { router } from "expo-router";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
+const isWeb = Platform.OS === "web";
+const isDesktop = width >= 1024;
 
-// --- DATA POOLS (Defined outside to prevent "Cannot find name" errors) ---
-// ! Not working
-const KURAL_POOL = [
-    // { 
-    //     number: 391, 
-    //     line1: "கற்க கசடறக் கற்பவை கற்றபின்", 
-    //     line2: "நிற்க அதற்குத் தக.", 
-    //     translation: "Learn perfectly what should be learned; and then live according to that learning." 
-    // },
-    { 
-        number: 666, 
-        line1: "எண்ணிய எண்ணியாங்கு எய்துப எண்ணியார்", 
-        line2: "திண்ணியர் ஆகப் பெறின்.", 
-        translation: "If those who have planned an undertaking possess firmness of mind, they will certainly achieve what they desired." 
-    },
-    { 
-        number: 392, 
-        line1: "எண்ணென்ப ஏனை எழுத்தென்ப இவ்விரண்டும்", 
-        line2: "கண்ணென்ப வாழும் உயிர்க்கு.", 
-        translation: "Letters and numbers are the two eyes of living beings." 
-    }
-];
-
-const AFFAIRS_DATA = [
-    { id: '1', category: 'POLITY', title: 'New Bill on Digital Data Protection tabled in Parliament.', readTime: '2 min read' },
-    { id: '2', category: 'ECONOMY', title: 'RBI maintains Repo Rate at 6.5% for the fourth time.', readTime: '3 min read' },
-];
-
-// --- HELPER COMPONENTS ---
-const TypewriterText = ({ text, style, delay = 40, active }: any) => {
-    const [displayedText, setDisplayedText] = useState("");
-    useEffect(() => {
-        if (!active) { setDisplayedText(""); return; }
-        let currentIndex = 0;
-        const interval = setInterval(() => {
-            if (currentIndex <= text.length) {
-                setDisplayedText(text.substring(0, currentIndex));
-                currentIndex++;
-            } else { clearInterval(interval); }
-        }, delay);
-        return () => clearInterval(interval);
-    }, [text, active]);
-    return <Text style={style}>{displayedText}</Text>;
-};
-
-// --- MAIN HOME SCREEN ---
 export default function HomeScreen() {
-    const { theme } = useTheme();
-    const [currentKural, setCurrentKural] = useState(KURAL_POOL[0]);
-    const [isSpeaking, setIsSpeaking] = useState(false);
-    const [isTyping, setIsTyping] = useState(false);
-    const userName = "Buddy";
+  const { theme, isDarkMode } = useTheme();
+  const userName = "Buddy";
 
-    // GUARD: Remembers if we already spoke the welcome message
-    const hasWelcomed = useRef(false);
+  const fadeText = useRef(new Animated.Value(0)).current;
+  const fadeButton = useRef(new Animated.Value(0)).current;
+  const fadeImage = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(15)).current;
 
-    const slideLeftAnim = useRef(new Animated.Value(-20)).current; 
-    const kuralFadeAnim = useRef(new Animated.Value(0)).current;
-    const timeouts = useRef<any[]>([]);
+  const hasSpoken = useRef(false);
 
-    const stopAllAudio = () => {
-        Speech.stop();
-        timeouts.current.forEach(clearTimeout);
-        timeouts.current = [];
-        setIsSpeaking(false);
-    };
+  useEffect(() => {
+    Animated.sequence([
+      Animated.delay(100),
+      Animated.parallel([
+        Animated.timing(fadeText, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(translateY, {
+          toValue: 0,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.timing(fadeButton, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.timing(fadeImage, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+    ]).start();
 
-    const speakKuralOnly = () => {
-        stopAllAudio();
-        setIsSpeaking(true);
-        Speech.speak(`${currentKural.line1} ${currentKural.line2}`, { language: 'ta-IN', rate: 0.85 });
-        const t1 = setTimeout(() => {
-            Speech.speak("In English, we say...", { language: 'en-US', rate: 0.9 });
-        }, 3500);
-        const t2 = setTimeout(() => {
-            Speech.speak(currentKural.translation, { language: 'en-US', rate: 1.0 });
-            setIsSpeaking(false);
-        }, 5500);
-        timeouts.current.push(t1, t2);
-    };
+    if (!hasSpoken.current) {
+      Speech.speak(`Welcome ${userName}`, { language: "en-US", rate: 0.9 });
+      hasSpoken.current = true;
+    }
+  }, []);
 
-    const runKuralAnimation = () => {
-        setIsTyping(false);
-        kuralFadeAnim.setValue(0);
-        slideLeftAnim.setValue(-20);
-        Animated.parallel([
-            Animated.timing(kuralFadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
-            Animated.spring(slideLeftAnim, { toValue: 0, tension: 45, friction: 8, useNativeDriver: true })
-        ]).start(() => { setIsTyping(true); });
-    };
+  return (
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      {/* REMOVED: Local NavBar code has been deleted.
+               The Global Header from (tabs)/_layout.tsx will now handle the top navigation.
+            */}
 
-    useEffect(() => {
-        runKuralAnimation();
-        
-        // ONLY speak welcome if it hasn't happened yet in this session
-        if (!hasWelcomed.current) {
-            Speech.speak(`Hey, welcome ${userName}!`, { language: 'en-US', rate: 0.9 });
-            hasWelcomed.current = true; // Lock it so it doesn't repeat
-        }
-
-        return () => stopAllAudio();
-    }, []);
-
-    const handleShuffle = () => {
-        stopAllAudio();
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        const filtered = KURAL_POOL.filter(k => k.number !== currentKural.number);
-        const next = filtered[Math.floor(Math.random() * filtered.length)];
-        setCurrentKural(next);
-        runKuralAnimation(); 
-    };
-
-    return (
-        <View style={[styles.container, { backgroundColor: theme.background }]}>
-            
-            {/* --- FIXED HEADER (One place for welcome text) --- */}
-            <View style={[styles.fixedHeader, { backgroundColor: theme.background }]}>
-                <View>
-                    <Text style={[styles.dateText, { color: theme.textSecondary }]}>
-                        {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long' })}
-                    </Text>
-                    <Text style={[styles.userName, { color: theme.text }]}>Hey, welcome {userName}!</Text>
-                </View>
-                <TouchableOpacity onPress={handleShuffle} style={[styles.shuffleButton, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-                    <RefreshCcw size={20} color={theme.primary} />
-                </TouchableOpacity>
-            </View>
-
-            <ScrollView 
-                showsVerticalScrollIndicator={false} 
-                contentContainerStyle={styles.scrollContent}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[
+          styles.scrollContent,
+          // This padding ensures content starts below the global header
+          { paddingTop: isWeb ? 40 : 20 },
+        ]}
+      >
+        <View style={styles.responsiveWrapper}>
+          {/* --- HERO SECTION --- */}
+          <View style={styles.heroSection}>
+            <Animated.View
+              style={[
+                styles.heroTextContainer,
+                { opacity: fadeText, transform: [{ translateY }] },
+              ]}
             >
-                {/* KURAL SECTION */}
-                <Animated.View style={[styles.kuralSection, { opacity: kuralFadeAnim }]}>
-                    <View style={styles.kuralHeaderRow}>
-                        <Animated.View style={{ flex: 1, transform: [{ translateX: slideLeftAnim }] }}>
-                            <TypewriterText 
-                                active={isTyping}
-                                text={currentKural.line1} 
-                                style={[styles.kuralLine, { color: theme.text }]} 
-                            />
-                            <TypewriterText 
-                                active={isTyping}
-                                delay={60} 
-                                text={currentKural.line2} 
-                                style={[styles.kuralLine, { color: theme.text, marginTop: 4 }]} 
-                            />
-                        </Animated.View>
-                        
-                        <TouchableOpacity 
-                            onPress={isSpeaking ? stopAllAudio : speakKuralOnly}
-                            style={[styles.voiceButton, { backgroundColor: isSpeaking ? theme.primary : theme.surface }]}
-                        >
-                            {isSpeaking ? <VolumeX size={22} color="#FFF" /> : <Volume2 size={22} color={theme.primary} />}
-                        </TouchableOpacity>
-                    </View>
-                    
-                    {isTyping && (
-                        <View>
-                            <Text style={[styles.kuralTranslation, { color: theme.textSecondary }]}>
-                                "{currentKural.translation}"
-                            </Text>
-                            <Text style={[styles.kuralNumber, { color: theme.primary }]}>
-                                — Kural {currentKural.number}
-                            </Text>
-                        </View>
-                    )}
-                </Animated.View>
+              <Text style={[styles.welcomeText, { color: theme.primary }]}>
+                WELCOME, {userName.toUpperCase()}!
+              </Text>
+              <Text style={[styles.heroTitle, { color: theme.text }]}>
+                Master the UPSC Syllabus with{" "}
+                <Text style={{ color: theme.primary }}>Ethora</Text>
+              </Text>
+              <Text style={[styles.heroSub, { color: theme.textSecondary }]}>
+                Your all-in-one destination for{" "}
+                <Text
+                  style={{ color: theme.primary, fontWeight: "700" }}
+                  onPress={() => router.push("/current-affairs")}
+                >
+                  Daily Current Affairs
+                </Text>
+                , Subject Modules, and Realistic Mock Tests.
+              </Text>
 
-                {/* CURRENT AFFAIRS */}
-                <View style={styles.section}>
-                    <Text style={[styles.sectionTitle, { color: theme.text }]}>Current Affairs</Text>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingLeft: 24, paddingRight: 10 }}>
-                        {AFFAIRS_DATA.map((item) => (
-                            <TouchableOpacity key={item.id} style={[styles.affairsCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-                                <Text style={[styles.categoryText, { color: theme.primary }]}>{item.category}</Text>
-                                <Text style={[styles.affairsTitle, { color: theme.text }]}>{item.title}</Text>
-                                <View style={styles.affairsFooter}>
-                                    <Globe size={12} color={theme.textSecondary} />
-                                    <Text style={[styles.readTime, { color: theme.textSecondary }]}>{item.readTime}</Text>
-                                </View>
-                            </TouchableOpacity>
-                        ))}
-                    </ScrollView>
-                </View>
+              <Animated.View style={{ opacity: fadeButton }}>
+                <TouchableOpacity
+                  onPress={() => router.push("/learn")}
+                  style={[
+                    styles.btnPrimary,
+                    { backgroundColor: theme.primary },
+                  ]}
+                >
+                  <Text style={styles.btnPrimaryText}>Go to Course</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            </Animated.View>
 
-                {/* MOCK TEST CHALLENGE */}
-                <View style={[styles.mockCard, { backgroundColor: theme.primary, marginTop: 30 }]}>
-                    <View style={styles.mockContent}>
-                        <Zap size={22} color="#FFF" fill="#FFF" />
-                        <View style={{ flex: 1, marginLeft: 12 }}>
-                            <Text style={styles.mockTitle}>Ready for a Challenge?</Text>
-                            <Text style={styles.mockSub}>Quick 10-question Mini Mock Test</Text>
-                        </View>
-                        <TouchableOpacity style={styles.mockBtn} onPress={() => router.push('/practice')}>
-                            <Text style={[styles.mockBtnText, { color: theme.primary }]}>Start Now</Text>
-                        </TouchableOpacity>
-                    </View>
+            {isWeb && (
+              <Animated.View
+                style={[styles.heroImageContainer, { opacity: fadeImage }]}
+              >
+                <View style={[styles.heroImageWrapper, { overflow: 'hidden' }]}>
+                  <Image
+                    source={{
+                      uri: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Emblem_of_India.svg/800px-Emblem_of_India.svg.png",
+                    }}
+                    style={[
+                      styles.heroImage,
+                      { tintColor: isDarkMode ? "#94A3B8" : "#2D5A61" },
+                    ]}
+                    resizeMode="contain"
+                  />
                 </View>
-            </ScrollView>
+              </Animated.View>
+            )}
+          </View>
+
+          {/* --- CONTINUE LEARNING SECTION --- */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <PlayCircle size={24} color={theme.primary} />
+              <Text
+                style={[
+                  styles.sectionTitle,
+                  { color: theme.text, marginLeft: 12 },
+                ]}
+              >
+                Continue Learning
+              </Text>
+            </View>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => router.push("/learn")}
+              style={[
+                styles.continueCard,
+                {
+                  backgroundColor: isDarkMode ? theme.surfaceAlt : "#F0F7F8",
+                  borderColor: theme.border,
+                },
+              ]}
+            >
+              <View style={styles.continueCardContent}>
+                <Text style={[styles.continueTag, { color: theme.primary }]}>
+                  MODERN HISTORY
+                </Text>
+                <Text style={[styles.continueTitle, { color: theme.text }]}>
+                  The Revolt of 1857: Causes and Impact
+                </Text>
+                <View style={styles.continueMeta}>
+                  <Clock size={14} color={theme.textSecondary} />
+                  <Text
+                    style={[
+                      styles.continueMetaText,
+                      { color: theme.textSecondary },
+                    ]}
+                  >
+                    {" "}
+                    45 mins remaining
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                onPress={() => router.push("/learn")}
+                style={[styles.resumeBtn, { backgroundColor: theme.primary }]}
+              >
+                <PlayCircle size={20} color="#FFF" />
+                <Text style={styles.resumeBtnText}>Resume</Text>
+              </TouchableOpacity>
+            </TouchableOpacity>
+          </View>
+
+          {/* --- DAILY AFFAIRS SECTION --- */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Newspaper size={24} color={theme.primary} />
+              <Text
+                style={[
+                  styles.sectionTitle,
+                  { color: theme.text, marginLeft: 12 },
+                ]}
+              >
+                Daily Current Affairs
+              </Text>
+            </View>
+            <View style={styles.affairsGrid}>
+              {[1, 2, 3].map((item) => (
+                <TouchableOpacity
+                  key={item}
+                  onPress={() => router.push("/current-affairs")}
+                  style={[
+                    styles.affairCard,
+                    {
+                      backgroundColor: theme.surface,
+                      borderColor: theme.border,
+                    },
+                  ]}
+                >
+                  <View style={{ flex: 1 }}>
+                    <View style={[styles.dateBadge, { backgroundColor: isDarkMode ? theme.surfaceAlt : "#E0F2F1" }]}>
+                      <Text style={[styles.dateText, { color: isDarkMode ? theme.primary : "#00796B" }]}>
+                        March {item + 1}, 2026
+                      </Text>
+                    </View>
+                    <Text style={[styles.affairTitle, { color: theme.text }]}>
+                      Important Editorial Analysis: India's Foreign Policy
+                    </Text>
+                  </View>
+                  <View style={styles.cardFooter}>
+                    <Text style={{ color: theme.primary, fontWeight: "700" }}>
+                      Read Now
+                    </Text>
+                    <ChevronRight size={16} color={theme.primary} />
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
         </View>
-    );
+
+        {/* --- WEB INFO & INSTALL APP (Web Only) --- */}
+        {
+          isWeb && (
+            <View
+              style={[
+                styles.webInfoSection,
+                { backgroundColor: theme.surfaceAlt, borderColor: theme.border },
+              ]}
+            >
+              <Text style={[styles.webInfoTitle, { color: theme.text }]}>
+                Experience the Best of Ethora
+              </Text>
+              <Text style={[styles.webInfoText, { color: theme.textSecondary }]}>
+                Ethora is an all-in-one platform for UPSC aspirants. Read daily
+                current affairs, complete structured syllabus modules, and track
+                your progress in real-time. For a calm and distraction-free pocket
+                learning experience, download our mobile application today.
+              </Text>
+              <TouchableOpacity
+                style={[styles.installBtn, { backgroundColor: theme.primary }]}
+              >
+                <Text style={styles.installBtnText}>Install our app</Text>
+              </TouchableOpacity>
+            </View>
+          )
+        }
+      </ScrollView >
+    </View >
+  );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1 },
-    fixedHeader: { 
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 10,
-        flexDirection: 'row', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        paddingHorizontal: 24, 
-        paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 20 : 60,
-        paddingBottom: 20,
-    },
-    scrollContent: { 
-        paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 130 : 170, 
-        paddingBottom: 40 
-    },
-    dateText: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase' },
-    userName: { fontSize: 26, fontWeight: '800' },
-    shuffleButton: { width: 48, height: 48, borderRadius: 16, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-    kuralSection: { paddingHorizontal: 24, marginBottom: 35 },
-    kuralHeaderRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 12 },
-    kuralLine: { fontSize: 20, fontWeight: '900', lineHeight: 28 },
-    voiceButton: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', elevation: 2 },
-    kuralTranslation: { fontSize: 15, lineHeight: 22, marginBottom: 4, fontStyle: 'italic' },
-    kuralNumber: { fontSize: 13, fontWeight: '800', opacity: 0.6 },
-    affairsCard: { width: width * 0.7, padding: 18, borderRadius: 24, marginRight: 16, borderWidth: 1, height: 150, justifyContent: 'space-between' },
-    categoryText: { fontSize: 10, fontWeight: '800' },
-    affairsTitle: { fontSize: 15, fontWeight: '700' },
-    affairsFooter: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    readTime: { fontSize: 11 },
-    mockCard: { marginHorizontal: 24, padding: 20, borderRadius: 24 },
-    mockContent: { flexDirection: 'row', alignItems: 'center' },
-    mockTitle: { color: '#FFF', fontSize: 16, fontWeight: '800' },
-    mockSub: { color: '#FFF', fontSize: 12, opacity: 0.8 },
-    mockBtn: { backgroundColor: '#FFF', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 },
-    mockBtnText: { fontSize: 12, fontWeight: '900' },
-    section: { marginTop: 10 },
-    sectionTitle: { fontSize: 20, fontWeight: '800', paddingHorizontal: 24, marginBottom: 15 },
+  container: { flex: 1 },
+  logo: { fontSize: 24, fontWeight: "900", letterSpacing: -1 },
+  scrollContent: { flexGrow: 1 },
+  responsiveWrapper: {
+    width: "100%",
+    alignSelf: "center",
+    paddingHorizontal: isWeb ? '5%' : 20,
+    maxWidth: 1100,
+    paddingTop: 30,
+    paddingBottom: 100
+  },
+  heroSection: {
+    flexDirection: isWeb && width > 800 ? "row" : "column",
+    paddingVertical: isWeb && width > 800 ? 48 : 20,
+    gap: isWeb && width > 800 ? 48 : 16,
+    alignItems: "center",
+  },
+  heroTextContainer: { flex: 1 },
+  welcomeText: {
+    fontSize: isWeb && width > 800 ? 16 : 12,
+    fontWeight: "800",
+    marginBottom: isWeb && width > 800 ? 16 : 8,
+    letterSpacing: 1,
+    textTransform: "uppercase",
+  },
+  heroTitle: {
+    fontSize: width > 800 ? 56 : 30,
+    fontWeight: "900",
+    marginBottom: isWeb && width > 800 ? 24 : 12,
+    lineHeight: width > 800 ? 64 : 36,
+    letterSpacing: -1,
+  },
+  heroSub: { fontSize: width > 800 ? 18 : 13, lineHeight: width > 800 ? 28 : 20, marginBottom: isWeb && width > 800 ? 32 : 16 },
+  btnPrimary: {
+    alignSelf: "flex-start",
+    paddingHorizontal: width > 800 ? 32 : 24,
+    paddingVertical: width > 800 ? 16 : 12,
+    borderRadius: 12,
+    elevation: 2,
+    minHeight: width > 800 ? 48 : 40,
+    justifyContent: "center",
+  },
+  btnPrimaryText: { color: "#FFF", fontWeight: "800", fontSize: width > 800 ? 16 : 14 },
+  heroImageContainer: {
+    flex: 1,
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: width > 800 ? 450 : 200,
+    marginTop: width > 800 ? 0 : 8,
+  },
+  heroImageWrapper: {
+    width: width > 800 ? 500 : "100%",
+    height: width > 800 ? 380 : 180, // Reduced height to crop bottom text
+  },
+  heroImage: {
+    width: "100%",
+    height: width > 800 ? 450 : 220, // Keep full height to prevent squishing
+    marginTop: 0,
+  },
+  section: { paddingVertical: 32 },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  sectionTitle: { fontSize: 24, fontWeight: "800", letterSpacing: -0.5 },
+
+  // Continue Learning Styles
+  continueCard: {
+    flexDirection: width > 600 ? "row" : "column",
+    alignItems: width > 600 ? "center" : "stretch",
+    justifyContent: "space-between",
+    padding: 24,
+    borderRadius: 16,
+    borderWidth: 1,
+    gap: 20,
+  },
+  continueCardContent: { flex: 1 },
+  continueTag: {
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 1,
+    marginBottom: 8,
+  },
+  continueTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    marginBottom: 12,
+    lineHeight: 28,
+  },
+  continueMeta: { flexDirection: "row", alignItems: "center" },
+  continueMetaText: { fontSize: 14, fontWeight: "600", marginLeft: 4 },
+  resumeBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 12,
+    minHeight: 48,
+    gap: 8,
+    justifyContent: "center",
+  },
+  resumeBtnText: { color: "#FFF", fontWeight: "800", fontSize: 16 },
+
+  affairsGrid: { flexDirection: width > 800 ? "row" : "column", gap: 24 },
+  affairCard: {
+    flex: 1,
+    padding: 24,
+    borderRadius: 16,
+    borderWidth: 1,
+    minHeight: 200,
+    display: "flex",
+    flexDirection: "column",
+  },
+  dateBadge: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  dateText: { fontSize: 12, fontWeight: "800" },
+  affairTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    lineHeight: 26,
+    marginBottom: 24,
+  },
+  cardFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: "auto",
+  },
+
+  webInfoSection: {
+    padding: 48,
+    marginTop: 48,
+    borderRadius: 16,
+    borderWidth: 1,
+    alignItems: "center",
+  },
+  webInfoTitle: { fontSize: 24, fontWeight: "800", marginBottom: 16 },
+  webInfoText: {
+    fontSize: 16,
+    lineHeight: 24,
+    textAlign: "center",
+    marginBottom: 32,
+    maxWidth: 640,
+  },
+  installBtn: {
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 12,
+    elevation: 2,
+  },
+  installBtnText: {
+    color: "#FFF",
+    fontWeight: "800",
+    fontSize: 16,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
 });

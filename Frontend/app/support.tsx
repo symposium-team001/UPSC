@@ -1,10 +1,25 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
-import { Send, ChevronLeft } from 'lucide-react-native';
+import { 
+    View, 
+    Text, 
+    StyleSheet, 
+    TextInput, 
+    ScrollView, 
+    TouchableOpacity, 
+    KeyboardAvoidingView, 
+    Platform,
+    Image,
+    Dimensions,
+    SafeAreaView
+} from 'react-native';
+import { Send, Paperclip, Smile, Image as ImageIcon, ChevronLeft } from 'lucide-react-native'; 
 import { useTheme } from '@/context/ThemeContext';
-import { useRouter } from 'expo-router';
+import { useRouter } from 'expo-router'; 
+import GlobalHeader from '../components/GlobalHeader';
 
-// Define the message type
+const { width } = Dimensions.get('window');
+const isMobile = width < 450;
+
 interface Message {
     id: number;
     text: string;
@@ -14,135 +29,189 @@ interface Message {
 
 export default function SupportChatScreen() {
     const { theme, isDarkMode } = useTheme();
-    const router = useRouter();
+    const router = useRouter(); 
     const scrollViewRef = useRef<ScrollView>(null);
     
-    // --- STATE MANAGEMENT ---
     const [message, setMessage] = useState('');
     const [messages, setMessages] = useState<Message[]>([
         {
             id: 1,
             text: `Welcome, Machi. I am your Support Assistant. How can I facilitate your journey today?`,
             sender: 'bot',
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            time: "10:00 AM"
         }
     ]);
 
-    const botReplies = [
-        "Understood. I am looking into this for you, Aspirant.",
-        "Your request has been logged. Our technical team is on it.",
-        "Integrity and patience are key. Let me verify that data for you.",
-        "I've shared your concern with the Priority Desk. Anything else?",
-        "Noted. Please ensure your internet connection is stable while I sync your data."
-    ];
-
     const handleSend = () => {
         if (message.trim().length === 0) return;
-
-        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        
-        // 1. Add User Message
-        const newUserMsg: Message = { id: Date.now(), text: message, sender: 'user', time };
+        const newUserMsg: Message = { 
+            id: Date.now(), 
+            text: message, 
+            sender: 'user', 
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+        };
         setMessages(prev => [...prev, newUserMsg]);
         setMessage('');
-
-        // 2. Simulate Bot Thinking & Reply
-        setTimeout(() => {
-            const randomReply = botReplies[Math.floor(Math.random() * botReplies.length)];
-            const botMsg: Message = { id: Date.now() + 1, text: randomReply, sender: 'bot', time };
-            setMessages(prev => [...prev, botMsg]);
-        }, 1000);
+        // Auto-scroll to bottom after message
+        setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
     };
 
     return (
-        <KeyboardAvoidingView 
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-            style={[s.container, { backgroundColor: theme.background }]}
-        >
-            {/* Header */}
-            <View style={[s.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-                <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
-                    <ChevronLeft size={24} color={theme.text} />
-                </TouchableOpacity>
-                <View>
-                    <Text style={[s.headerTitle, { color: theme.text }]}>Priority Support</Text>
-                    <View style={s.statusRow}>
-                        <View style={s.onlineDot} />
-                        <Text style={[s.statusText, { color: theme.textSecondary }]}>AI Desk Online</Text>
-                    </View>
-                </View>
-            </View>
+        <SafeAreaView style={[s.container, { backgroundColor: isDarkMode ? '#0F172A' : '#F8FAFC' }]}>
+            <GlobalHeader />
 
-            <ScrollView 
-                ref={scrollViewRef}
-                contentContainerStyle={s.chatContent} 
-                showsVerticalScrollIndicator={false}
-                onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+            <KeyboardAvoidingView 
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+                style={{ flex: 1 }}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
             >
-                {messages.map((msg) => (
-                    <View 
-                        key={msg.id} 
-                        style={[
-                            msg.sender === 'bot' ? s.botMessage : s.userMessage, 
-                            { backgroundColor: msg.sender === 'bot' ? theme.surfaceAlt : theme.primary }
-                        ]}
-                    >
-                        <Text style={[s.messageText, { color: msg.sender === 'bot' ? theme.text : '#FFFFFF' }]}>
-                            {msg.text}
-                        </Text>
-                        <Text style={[
-                            s.timeStamp, 
-                            { 
-                                color: msg.sender === 'bot' ? theme.textTertiary : 'rgba(255,255,255,0.7)', 
-                                textAlign: msg.sender === 'bot' ? 'left' : 'right' 
-                            }
-                        ]}>
-                            {msg.time}
+                <ScrollView 
+                    ref={scrollViewRef}
+                    contentContainerStyle={s.scrollContent}
+                    showsVerticalScrollIndicator={false}
+                    bounces={false}
+                >
+                    <View style={s.cardWrapper}>
+                        <View style={[s.chatCard, { backgroundColor: theme.surface, borderColor: isDarkMode ? '#334155' : '#E2E8F0' }]}>
+                            
+                            {/* Mobile-Optimized Header */}
+                            <View style={s.pageHeader}>
+                                <View style={s.titleRow}>
+                                    <TouchableOpacity onPress={() => router.back()} style={s.backButton}>
+                                        <ChevronLeft size={isMobile ? 24 : 28} color={theme.text} />
+                                    </TouchableOpacity>
+                                    <Text style={[s.pageTitle, { color: theme.text, fontSize: isMobile ? 24 : 32 }]}>
+                                        Support
+                                    </Text>
+                                </View>
+                                <Text style={[s.pageSubtitle, { color: theme.textSecondary }]}>
+                                    Chat with our assistant
+                                </Text>
+                            </View>
+
+                            <View style={[s.divider, { backgroundColor: isDarkMode ? '#334155' : '#F1F5F9' }]} />
+
+                            {/* Messages List */}
+                            <View style={s.messageList}>
+                                {messages.map((msg) => (
+                                    <View key={msg.id} style={[s.messageRow, msg.sender === 'user' ? s.userRow : s.botRow]}>
+                                        <View style={[
+                                            s.bubble, 
+                                            { 
+                                                backgroundColor: msg.sender === 'bot' 
+                                                    ? (isDarkMode ? '#1E293B' : '#F1F5F9') 
+                                                    : '#4A767D',
+                                                borderBottomLeftRadius: msg.sender === 'bot' ? 4 : 16,
+                                                borderBottomRightRadius: msg.sender === 'user' ? 4 : 16,
+                                            }
+                                        ]}>
+                                            <Text style={[s.messageText, { color: msg.sender === 'bot' ? theme.text : '#FFFFFF' }]}>
+                                                {msg.text}
+                                            </Text>
+                                            <Text style={[s.timeText, { color: msg.sender === 'bot' ? theme.textTertiary : 'rgba(255,255,255,0.7)' }]}>
+                                                {msg.time}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                ))}
+                            </View>
+
+                            {/* Input Area */}
+                            <View style={[s.inputSection, { borderTopColor: isDarkMode ? '#334155' : '#F1F5F9' }]}>
+                                <View style={[s.inputContainer, { backgroundColor: isDarkMode ? '#0F172A' : '#F8FAFC', borderColor: isDarkMode ? '#334155' : '#E2E8F0' }]}>
+                                    <TextInput
+                                        style={[s.input, { color: theme.text }]}
+                                        placeholder="Type a message..."
+                                        placeholderTextColor={theme.textTertiary}
+                                        value={message}
+                                        onChangeText={setMessage}
+                                        multiline
+                                        maxLength={500}
+                                    />
+                                    <View style={s.inputActions}>
+                                        { !isMobile && <TouchableOpacity style={s.iconBtn}><Paperclip size={20} color={theme.textTertiary} /></TouchableOpacity> }
+                                        <TouchableOpacity 
+                                            style={[s.sendBtn, { opacity: message.trim().length > 0 ? 1 : 0.6 }]} 
+                                            onPress={handleSend}
+                                            disabled={message.trim().length === 0}
+                                        >
+                                            <Send size={18} color="#FFF" />
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                            </View>
+                        </View>
+                        
+                        <Text style={[s.footerNote, { color: theme.textTertiary }]}>
+                            © 2026 Ethora Support • <Text style={{ color: '#4A767D', fontWeight: '700' }}>Call Us</Text>
                         </Text>
                     </View>
-                ))}
-            </ScrollView>
-
-            {/* Input Bar */}
-            <View style={[s.inputWrapper, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
-                <View style={[s.inputContainer, { backgroundColor: isDarkMode ? '#1E293B' : '#F1F5F9' }]}>
-                    <TextInput
-                        style={[s.input, { color: theme.text }]}
-                        placeholder="Describe your issue..."
-                        placeholderTextColor={theme.textTertiary}
-                        value={message}
-                        onChangeText={setMessage}
-                        multiline={true}
-                    />
-                    <TouchableOpacity 
-                        style={[s.sendBtn, { backgroundColor: theme.primary, opacity: message.trim().length > 0 ? 1 : 0.6 }]}
-                        onPress={handleSend}
-                        disabled={message.trim().length === 0}
-                    >
-                        <Send size={18} color="#FFF" />
-                    </TouchableOpacity>
-                </View>
-            </View>
-        </KeyboardAvoidingView>
+                </ScrollView>
+            </KeyboardAvoidingView>
+        </SafeAreaView>
     );
 }
 
 const s = StyleSheet.create({
     container: { flex: 1 },
-    header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 50, paddingBottom: 15, borderBottomWidth: 1 },
-    backBtn: { marginRight: 15 },
-    headerTitle: { fontSize: 18, fontWeight: '800' },
-    statusRow: { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
-    onlineDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#10B981', marginRight: 6 },
-    statusText: { fontSize: 12, fontWeight: '600' },
-    chatContent: { padding: 20, paddingBottom: 40 },
-    botMessage: { padding: 12, paddingHorizontal: 16, borderRadius: 20, borderTopLeftRadius: 4, alignSelf: 'flex-start', maxWidth: '85%', marginBottom: 16 },
-    userMessage: { padding: 12, paddingHorizontal: 16, borderRadius: 20, borderTopRightRadius: 4, alignSelf: 'flex-end', maxWidth: '85%', marginBottom: 16 },
-    messageText: { fontSize: 15, lineHeight: 22, fontWeight: '500' },
-    timeStamp: { fontSize: 10, marginTop: 4, fontWeight: '600' },
-    inputWrapper: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: Platform.OS === 'ios' ? 34 : 15, borderTopWidth: 1 },
-    inputContainer: { flexDirection: 'row', alignItems: 'flex-end', padding: 8, borderRadius: 24, paddingLeft: 16 },
-    input: { flex: 1, fontSize: 15, fontWeight: '500', maxHeight: 120, paddingTop: Platform.OS === 'ios' ? 10 : 5, paddingBottom: Platform.OS === 'ios' ? 10 : 5 },
-    sendBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginLeft: 8, marginBottom: 2 }
+    scrollContent: { 
+        flexGrow: 1, 
+        paddingBottom: 20 
+    },
+    cardWrapper: {
+        width: isMobile ? '94%' : '100%',
+        maxWidth: 800,
+        alignSelf: 'center',
+        paddingTop: isMobile ? 15 : 40,
+        alignItems: 'center'
+    },
+    chatCard: { 
+        width: '100%', 
+        borderRadius: 20,
+        borderWidth: 1,
+        padding: isMobile ? 20 : 40,
+        minHeight: isMobile ? 500 : 650,
+        ...Platform.select({
+            ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.04, shadowRadius: 12 },
+            android: { elevation: 3 },
+        }),
+    },
+    pageHeader: { marginBottom: 20 },
+    titleRow: { flexDirection: 'row', alignItems: 'center', marginLeft: -5 },
+    backButton: { marginRight: 8, padding: 4 },
+    pageTitle: { fontWeight: '900', letterSpacing: -0.5 },
+    pageSubtitle: { fontSize: 13, marginTop: 2, marginLeft: isMobile ? 32 : 40, opacity: 0.8 },
+    divider: { height: 1, marginBottom: 25 },
+    messageList: { flex: 1, marginBottom: 20 },
+    messageRow: { flexDirection: 'row', marginBottom: 16 },
+    botRow: { alignSelf: 'flex-start', paddingRight: 40 },
+    userRow: { alignSelf: 'flex-end', paddingLeft: 40 },
+    bubble: { 
+        paddingHorizontal: 16, 
+        paddingVertical: 12, 
+        borderRadius: 16,
+    },
+    messageText: { fontSize: 14, lineHeight: 20, fontWeight: '500' },
+    timeText: { fontSize: 10, marginTop: 4, textAlign: 'right', fontWeight: '600' },
+    inputSection: { borderTopWidth: 1, paddingTop: 20 },
+    inputContainer: { 
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        borderWidth: 1, 
+        borderRadius: 15, 
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+    },
+    input: { flex: 1, fontSize: 14, maxHeight: 100, paddingRight: 10 },
+    inputActions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    iconBtn: { padding: 5 },
+    sendBtn: { 
+        backgroundColor: '#4A767D', 
+        width: 38,
+        height: 38,
+        borderRadius: 19,
+        alignItems: 'center', 
+        justifyContent: 'center',
+    },
+    footerNote: { marginTop: 20, fontSize: 12, marginBottom: 30, textAlign: 'center' },
 });

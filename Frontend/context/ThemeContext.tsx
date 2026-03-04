@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useColorScheme } from 'react-native';
+import { useColorScheme, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { lightTheme, darkTheme } from '../constants/colors';
 
+// Define the shape of our context
 type ThemeContextType = {
   theme: typeof lightTheme;
   isDarkMode: boolean;
@@ -10,7 +11,6 @@ type ThemeContextType = {
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
-
 const THEME_STORAGE_KEY = '@user_theme_preference';
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -18,7 +18,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isDarkMode, setIsDarkMode] = useState(systemColorScheme === 'dark');
   const [isLoading, setIsLoading] = useState(true);
 
-  // 1. Load the saved theme when the app first boots up
+  // 1. Load the saved theme from AsyncStorage (Works on Mobile & Web LocalStorage)
   useEffect(() => {
     const loadSavedTheme = async () => {
       try {
@@ -27,7 +27,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           setIsDarkMode(savedTheme === 'dark');
         }
       } catch (e) {
-        console.error("Failed to load theme", e);
+        console.warn("Failed to load theme preference:", e);
       } finally {
         setIsLoading(false);
       }
@@ -35,21 +35,32 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     loadSavedTheme();
   }, []);
 
-  // 2. Function to toggle and save the new preference
+  // 2. WEB ONLY: Update the browser body style to match the theme
+  // This prevents white flickering or borders on large screens
+  useEffect(() => {
+    if (Platform.OS === 'web' && !isLoading) {
+      const activeTheme = isDarkMode ? darkTheme : lightTheme;
+      if (typeof document !== 'undefined') {
+        document.body.style.backgroundColor = activeTheme.background;
+        document.body.style.transition = 'background-color 0.3s ease'; // Smooth transition
+      }
+    }
+  }, [isDarkMode, isLoading]);
+
+  // 3. Toggle logic with persistence
   const toggleTheme = async () => {
     try {
       const newMode = !isDarkMode;
       setIsDarkMode(newMode);
       await AsyncStorage.setItem(THEME_STORAGE_KEY, newMode ? 'dark' : 'light');
     } catch (e) {
-      console.error("Failed to save theme", e);
+      console.error("Failed to save theme:", e);
     }
   };
 
   const theme = isDarkMode ? darkTheme : lightTheme;
 
-  // Don't render children until we know which theme to show
-  // This prevents that annoying "flicker" from white to black
+  // Prevent UI flash during initial storage read
   if (isLoading) return null;
 
   return (
@@ -61,6 +72,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
 export const useTheme = () => {
   const context = useContext(ThemeContext);
-  if (!context) throw new Error('useTheme must be used within a ThemeProvider');
+  if (!context) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
   return context;
 };
