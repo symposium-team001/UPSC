@@ -4,23 +4,30 @@ import {
     Text,
     StyleSheet,
     TouchableOpacity,
-    Dimensions,
     Animated,
-    Platform
+    Platform,
+    Image,
+    useWindowDimensions,
+    ScrollView
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { GraduationCap, BarChart3, ArrowRight } from 'lucide-react-native';
+import { GraduationCap, BookOpen, Newspaper, PenTool, ArrowRight, LogIn, UserPlus } from 'lucide-react-native';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useTheme } from '../context/ThemeContext';
 import * as Haptics from 'expo-haptics';
-
-const { width, height } = Dimensions.get('window');
-const isSmallDevice = width < 450; // Simple threshold for mobile vs web/tablet
+import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import NationalEmblem from '../components/icons/NationalEmblem';
 
 export default function OnboardingScreen() {
     const router = useRouter();
     const { theme, isDarkMode } = useTheme();
-    const slideUp = useRef(new Animated.Value(30)).current;
-    const fade = useRef(new Animated.Value(0)).current;
+    const { width } = useWindowDimensions();
+    
+    const isDesktop = width >= 1024;
+    const isTablet = width >= 768 && width < 1024;
+
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const slideAnim = useRef(new Animated.Value(20)).current;
 
     const getGreeting = () => {
         const hour = new Date().getHours();
@@ -29,161 +36,321 @@ export default function OnboardingScreen() {
         return "Good Evening, Aspirant!";
     };
 
+    useFocusEffect(
+        React.useCallback(() => {
+            const checkLogin = async () => {
+                const loggedIn = await AsyncStorage.getItem('is_logged_in');
+                if (loggedIn === 'true') {
+                    router.replace('/(tabs)');
+                }
+            };
+            checkLogin();
+        }, [])
+    );
+
     useEffect(() => {
         Animated.parallel([
-            Animated.timing(slideUp, { toValue: 0, duration: 800, useNativeDriver: true }),
-            Animated.timing(fade, { toValue: 1, duration: 800, useNativeDriver: true })
+            Animated.timing(fadeAnim, { toValue: 1, duration: 1000, useNativeDriver: true }),
+            Animated.timing(slideAnim, { toValue: 0, duration: 1000, useNativeDriver: true })
         ]).start();
     }, []);
 
-    const handleStart = () => {
+    const handleNavigate = (path: any) => {
         if (Platform.OS !== 'web') {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         }
-        router.replace('/login');
+        router.push(path);
+    };
+
+    const responsiveStyles: any = {
+        mainContent: [
+            styles.mainContent,
+            { 
+                flexDirection: isDesktop ? 'row' : 'column',
+                alignItems: isDesktop ? 'center' : 'stretch',
+                paddingHorizontal: isDesktop ? '8%' : 24,
+                paddingTop: isDesktop ? 60 : 20,
+            }
+        ],
+        heroText: [
+            styles.heroText,
+            { 
+                flex: isDesktop ? 1.2 : 0,
+                textAlign: isDesktop ? 'left' : 'center',
+                alignItems: isDesktop ? 'flex-start' : 'center'
+            }
+        ],
+        title: [
+            styles.title,
+            { 
+                fontSize: isDesktop ? 56 : 36,
+                textAlign: isDesktop ? 'left' : 'center',
+                lineHeight: isDesktop ? 64 : 44
+            }
+        ],
+        description: [
+            styles.description,
+            { 
+                fontSize: isDesktop ? 18 : 16,
+                textAlign: isDesktop ? 'left' : 'center',
+                maxWidth: isDesktop ? 600 : '100%'
+            }
+        ],
+        buttonGroup: [
+            styles.buttonGroup,
+            { 
+                flexDirection: (isDesktop || isTablet) ? 'row' : 'column',
+                width: (isDesktop || isTablet) ? 'auto' : '100%',
+                gap: 16
+            }
+        ],
+        emblemContainer: [
+            styles.emblemContainer,
+            { 
+                display: (Platform.OS === 'web' && isDesktop) ? 'flex' : 'none',
+                flex: 1,
+                alignItems: 'center',
+                justifyContent: 'center'
+            }
+        ],
+        cardsGrid: [
+            styles.cardsGrid,
+            { 
+                flexDirection: isDesktop ? 'row' : 'column',
+                gap: 20,
+                marginTop: isDesktop ? 80 : 40
+            }
+        ]
     };
 
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>
-            <Animated.View style={[
-                styles.content,
-                { opacity: fade, transform: [{ translateY: slideUp }] }
-            ]}>
+            <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+                    <Animated.View style={[
+                        { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
+                    ]}>
+                        
+                        {/* --- HERO SECTION --- */}
+                        <View style={responsiveStyles.mainContent}>
+                            <View style={responsiveStyles.heroText}>
+                                <View style={[styles.badge, { backgroundColor: theme.primary + '15' }]}>
+                                    <GraduationCap size={16} color={theme.primary} />
+                                    <Text style={[styles.badgeText, { color: theme.primary }]}>UPSC PREP ECOSYSTEM</Text>
+                                </View>
+                                
+                                <Text style={[responsiveStyles.title, { color: theme.text }]}>
+                                    Master the UPSC Syllabus with{" "}
+                                    <Text style={{ color: theme.primary }}>Ethora</Text>
+                                </Text>
+                                
+                                <Text style={[responsiveStyles.description, { color: theme.textSecondary }]}>
+                                    {getGreeting()} Your comprehensive, disciplined workspace for Daily Current Affairs, Subject Modules, and Realistic Mock Tests.
+                                </Text>
+    
+                                <View style={responsiveStyles.buttonGroup}>
+                                    <TouchableOpacity 
+                                        style={[styles.primaryBtn, { backgroundColor: theme.primary }]}
+                                        onPress={() => handleNavigate('/login')}
+                                    >
+                                        <LogIn size={20} color="#FFF" />
+                                        <Text style={styles.primaryBtnText}>Login</Text>
+                                    </TouchableOpacity>
+                                    
+                                    <TouchableOpacity 
+                                        style={[styles.secondaryBtn, { borderColor: theme.border, backgroundColor: theme.surface }]}
+                                        onPress={() => handleNavigate('/createAccount')}
+                                    >
+                                        <UserPlus size={20} color={theme.text} />
+                                        <Text style={[styles.secondaryBtnText, { color: theme.text }]}>Create Account</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+    
+                            {/* Emblem for Web Desktop */}
+                            <View style={responsiveStyles.emblemContainer}>
+                                <Image
+                                    source={require("../assets/images/emblem.png")}
+                                    style={{
+                                        width: isDesktop ? 320 : 200,
+                                        height: isDesktop ? 320 : 200,
+                                        tintColor: isDarkMode ? "#FFFFFF" : "#000000",
+                                    }}
+                                    resizeMode="contain"
+                                />
+                            </View>
+                        </View>
+    
+                        {/* --- QUICK ACCESS CARDS --- */}
+                        <View style={[styles.section, { paddingHorizontal: isDesktop ? '8%' : 24 }]}>
+                            <View style={responsiveStyles.cardsGrid}>
+                                <FeatureCard 
+                                    icon={<Newspaper size={24} color={theme.primary} />}
+                                    title="Current Affairs"
+                                    desc="Expert analysis of daily editorials and news for UPSC."
+                                    theme={theme}
+                                />
+                                <FeatureCard 
+                                    icon={<BookOpen size={24} color={theme.primary} />}
+                                    title="Syllabus Modules"
+                                    desc="Structured learning paths for Polity, History, and more."
+                                    theme={theme}
+                                />
+                                <FeatureCard 
+                                    icon={<PenTool size={24} color={theme.primary} />}
+                                    title="Mock Tests"
+                                    desc="Test your knowledge with real-time exam simulations."
+                                    theme={theme}
+                                />
+                            </View>
+                        </View>
+    
+                        {/* --- FOOTER INFO --- */}
+                        <View style={[styles.footer, { borderTopColor: theme.border }]}>
+                            <Text style={[styles.footerText, { color: theme.textSecondary }]}>
+                                © 2026 Ethora Learning Ecosystem. All rights reserved.
+                            </Text>
+                        </View>
+    
+                    </Animated.View>
+                </ScrollView>
+            </SafeAreaView>
+        </View>
+    );
+}
 
-                {/* Scalable Icon Wrapper */}
-                <View style={styles.iconWrapper}>
-                    <View style={[styles.iconCircle, { backgroundColor: theme.primary, opacity: 0.1 }]} />
-                    <GraduationCap
-                        size={isSmallDevice ? 80 : 100}
-                        color={theme.primary}
-                        strokeWidth={1.2}
-                    />
-
-                    <View style={[styles.accentIcon, { backgroundColor: theme.surfaceAlt, borderColor: theme.border, borderWidth: 1 }]}>
-                        <BarChart3 size={isSmallDevice ? 22 : 28} color={theme.primary} strokeWidth={2} />
-                    </View>
-                </View>
-
-                {/* Responsive Typography */}
-                <Text style={[styles.title, { color: theme.text }]}>
-                    {getGreeting()}
-                </Text>
-
-                <Text style={styles.quote}>
-                    "The best way to predict your UPSC result is to create it."
-                </Text>
-
-                <Text style={[styles.description, { color: theme.textSecondary }]}>
-                    Ethora is your personal mentor, ready to guide your journey to LBSNAA.
-                </Text>
-
-                <TouchableOpacity
-                    style={[styles.button, { backgroundColor: theme.primary }]}
-                    activeOpacity={0.9}
-                    onPress={handleStart}
-                >
-                    <Text style={styles.buttonText}>Enter Workspace</Text>
-                    <ArrowRight size={20} color="#FFF" style={{ marginLeft: 10 }} />
-                </TouchableOpacity>
-
-                {/* Footer labels - hidden on very small screens or wrapped */}
-                <View style={styles.footerLinks}>
-                    <Text style={styles.footerLabel}>ADAPTIVE LEARNING</Text>
-                    <View style={styles.dot} />
-                    <Text style={styles.footerLabel}>DAILY CURRENT AFFAIRS</Text>
-                    <View style={styles.dot} />
-                    <Text style={styles.footerLabel}>MOCK TESTS</Text>
-                </View>
-            </Animated.View>
+function FeatureCard({ icon, title, desc, theme }: any) {
+    return (
+        <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+            <View style={[styles.cardIcon, { backgroundColor: theme.primary + '10' }]}>
+                {icon}
+            </View>
+            <Text style={[styles.cardTitle, { color: theme.text }]}>{title}</Text>
+            <Text style={[styles.cardDesc, { color: theme.textSecondary }]}>{desc}</Text>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 20
-    },
-    content: {
-        alignItems: 'center',
-        paddingHorizontal: isSmallDevice ? 25 : 40,
+    container: { flex: 1 },
+    scrollContent: { flexGrow: 1, paddingBottom: 60 },
+    mainContent: {
         width: '100%',
-        maxWidth: 800, // Keeps web view from getting too wide
+        alignSelf: 'center',
+        maxWidth: 1400,
     },
-    iconWrapper: {
-        width: isSmallDevice ? 150 : 200,
-        height: isSmallDevice ? 150 : 200,
+    heroText: {
+        marginBottom: 40,
+    },
+    badge: {
+        flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: isSmallDevice ? 20 : 40
+        alignSelf: 'flex-start',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+        gap: 8,
+        marginBottom: 24,
     },
-    iconCircle: {
-        position: 'absolute',
-        width: isSmallDevice ? 120 : 160,
-        height: isSmallDevice ? 120 : 160,
-        borderRadius: 80
-    },
-    accentIcon: {
-        position: 'absolute',
-        bottom: isSmallDevice ? 10 : 20,
-        right: isSmallDevice ? 10 : 20,
-        padding: isSmallDevice ? 8 : 12,
-        borderRadius: 12,
-        backgroundColor: '#fff',
-        ...Platform.select({
-            ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 10 },
-            android: { elevation: 5 },
-            web: { boxShadow: '0px 4px 10px rgba(0,0,0,0.1)' }
-        })
+    badgeText: {
+        fontSize: 12,
+        fontWeight: '800',
+        letterSpacing: 1,
     },
     title: {
-        fontSize: isSmallDevice ? 28 : 42, // Significantly smaller on mobile
         fontWeight: '900',
-        marginBottom: 10,
-        textAlign: 'center',
-        letterSpacing: -0.5
-    },
-    quote: {
-        fontSize: isSmallDevice ? 14 : 18,
-        color: '#4A767D',
-        fontStyle: 'italic',
-        fontWeight: '600',
         marginBottom: 20,
-        textAlign: 'center',
-        paddingHorizontal: 10
+        letterSpacing: -1,
     },
     description: {
-        fontSize: isSmallDevice ? 14 : 16,
-        textAlign: 'center',
-        lineHeight: isSmallDevice ? 22 : 26,
-        marginBottom: isSmallDevice ? 40 : 60,
-        maxWidth: 500
+        lineHeight: 28,
+        marginBottom: 40,
     },
-    button: {
+    buttonGroup: {
+        gap: 16,
+    },
+    primaryBtn: {
         flexDirection: 'row',
-        paddingVertical: isSmallDevice ? 16 : 20,
-        paddingHorizontal: isSmallDevice ? 30 : 40,
-        borderRadius: 12,
-        width: isSmallDevice ? '100%' : 'auto', // Full width button on mobile
         alignItems: 'center',
         justifyContent: 'center',
-        ...Platform.select({
-            ios: { shadowColor: '#4A767D', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 10 },
-            android: { elevation: 4 },
-            web: { boxShadow: '0px 4px 10px rgba(74, 118, 125, 0.3)' }
-        })
+        paddingHorizontal: 32,
+        paddingVertical: 18,
+        borderRadius: 14,
+        gap: 10,
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
     },
-    buttonText: { fontSize: 18, fontWeight: '800', color: '#FFF' },
-    footerLinks: {
+    primaryBtnText: {
+        color: '#FFF',
+        fontSize: 16,
+        fontWeight: '800',
+    },
+    secondaryBtn: {
         flexDirection: 'row',
-        flexWrap: 'wrap', // Allows labels to wrap on thin screens
-        justifyContent: 'center',
         alignItems: 'center',
-        marginTop: isSmallDevice ? 40 : 80,
-        gap: isSmallDevice ? 10 : 15
+        justifyContent: 'center',
+        paddingHorizontal: 32,
+        paddingVertical: 18,
+        borderRadius: 14,
+        borderWidth: 1,
+        gap: 10,
     },
-    footerLabel: { fontSize: 9, fontWeight: '800', color: '#94A3B8', letterSpacing: 0.5 },
-    dot: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#CBD5E1' }
-});
+    secondaryBtnText: {
+        fontSize: 16,
+        fontWeight: '800',
+    },
+    emblemContainer: {
+        padding: 40,
+    },
+    emblemImage: {
+        width: 320,
+        height: 320,
+    },
+    section: {
+        marginTop: 40,
+        marginBottom: 60,
+    },
+    cardsGrid: {
+        flex: 1,
+    },
+    card: {
+        flex: 1,
+        padding: 32,
+        borderRadius: 24,
+        borderWidth: 1,
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+    },
+    cardIcon: {
+        width: 56,
+        height: 56,
+        borderRadius: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 24,
+    },
+    cardTitle: {
+        fontSize: 20,
+        fontWeight: '800',
+        marginBottom: 12,
+    },
+    cardDesc: {
+        fontSize: 15,
+        lineHeight: 22,
+    },
+    footer: {
+        padding: 40,
+        alignItems: 'center',
+        borderTopWidth: 1,
+    },
+    footerText: {
+        fontSize: 13,
+        fontWeight: '600',
+    }
+});

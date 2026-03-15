@@ -8,7 +8,7 @@ import {
   Animated,
   Platform,
   Image,
-  Dimensions,
+  useWindowDimensions,
 } from "react-native";
 import {
   ChevronRight,
@@ -19,14 +19,17 @@ import {
 import * as Speech from "expo-speech";
 import { useTheme } from "../../context/ThemeContext";
 import { router } from "expo-router";
+import NationalEmblem from "../../components/icons/NationalEmblem";
 
-const { width } = Dimensions.get("window");
 const isWeb = Platform.OS === "web";
-const isDesktop = width >= 1024;
 
 export default function HomeScreen() {
   const { theme, isDarkMode } = useTheme();
+  const { width } = useWindowDimensions();
   const userName = "Buddy";
+
+  const isDesktop = width >= 1024;
+
 
   const fadeText = useRef(new Animated.Value(0)).current;
   const fadeButton = useRef(new Animated.Value(0)).current;
@@ -68,6 +71,89 @@ export default function HomeScreen() {
     }
   }, []);
 
+  const responsiveStyles: any = {
+    scrollContent: [
+      styles.scrollContent,
+      { paddingTop: Platform.OS === 'web' ? 40 : 20 },
+    ],
+    responsiveWrapper: [
+      styles.responsiveWrapper,
+      { paddingHorizontal: Platform.OS === 'web' ? '5%' : 20 },
+    ],
+    heroSection: [
+      styles.heroSection,
+      {
+        flexDirection: (Platform.OS === 'web' && width > 800) ? "row" : "column",
+        paddingVertical: (Platform.OS === 'web' && width > 800) ? 48 : 20,
+        gap: (Platform.OS === 'web' && width > 800) ? 48 : 16,
+      } as const,
+    ],
+    welcomeText: [
+      styles.welcomeText,
+      {
+        fontSize: (Platform.OS === 'web' && width > 800) ? 16 : 12,
+        marginBottom: (Platform.OS === 'web' && width > 800) ? 16 : 8,
+      },
+    ],
+    heroTitle: [
+      styles.heroTitle,
+      {
+        fontSize: width > 800 ? 56 : 30,
+        marginBottom: (Platform.OS === 'web' && width > 800) ? 24 : 12,
+        lineHeight: width > 800 ? 64 : 36,
+      },
+    ],
+    heroSub: [
+      styles.heroSub,
+      {
+        fontSize: width > 800 ? 18 : 13,
+        lineHeight: width > 800 ? 28 : 20,
+        marginBottom: (Platform.OS === 'web' && width > 800) ? 32 : 16,
+      },
+    ],
+    btnPrimary: [
+      styles.btnPrimary,
+      {
+        paddingHorizontal: width > 800 ? 32 : 24,
+        paddingVertical: width > 800 ? 16 : 12,
+        minHeight: width > 800 ? 48 : 40,
+      },
+    ],
+    btnPrimaryText: [
+      styles.btnPrimaryText,
+      { fontSize: width > 800 ? 16 : 14 },
+    ],
+    heroImageContainer: [
+      styles.heroImageContainer,
+      {
+        minHeight: width > 800 ? 450 : 200,
+        marginTop: width > 800 ? 0 : 8,
+      },
+    ],
+    heroImageWrapper: [
+      styles.heroImageWrapper,
+      {
+        width: width > 800 ? 500 : "100%",
+        height: width > 800 ? 380 : 180,
+      },
+    ],
+    heroImage: [
+      styles.heroImage,
+      { height: width > 800 ? 450 : 220 },
+    ],
+    continueCard: [
+      styles.continueCard,
+      {
+        flexDirection: width > 600 ? "row" : "column",
+        alignItems: width > 600 ? "center" : "stretch",
+      } as const,
+    ],
+    affairsGrid: [
+      styles.affairsGrid,
+      { flexDirection: width > 800 ? "row" : "column" } as const,
+    ],
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* REMOVED: Local NavBar code has been deleted.
@@ -76,29 +162,25 @@ export default function HomeScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[
-          styles.scrollContent,
-          // This padding ensures content starts below the global header
-          { paddingTop: isWeb ? 40 : 20 },
-        ]}
+        contentContainerStyle={responsiveStyles.scrollContent}
       >
-        <View style={styles.responsiveWrapper}>
+        <View style={responsiveStyles.responsiveWrapper}>
           {/* --- HERO SECTION --- */}
-          <View style={styles.heroSection}>
+          <View style={responsiveStyles.heroSection}>
             <Animated.View
               style={[
                 styles.heroTextContainer,
                 { opacity: fadeText, transform: [{ translateY }] },
               ]}
             >
-              <Text style={[styles.welcomeText, { color: theme.primary }]}>
+              <Text style={[responsiveStyles.welcomeText, { color: theme.primary }]}>
                 WELCOME, {userName.toUpperCase()}!
               </Text>
-              <Text style={[styles.heroTitle, { color: theme.text }]}>
+              <Text style={[responsiveStyles.heroTitle, { color: theme.text }]}>
                 Master the UPSC Syllabus with{" "}
                 <Text style={{ color: theme.primary }}>Ethora</Text>
               </Text>
-              <Text style={[styles.heroSub, { color: theme.textSecondary }]}>
+              <Text style={[responsiveStyles.heroSub, { color: theme.textSecondary }]}>
                 Your all-in-one destination for{" "}
                 <Text
                   style={{ color: theme.primary, fontWeight: "700" }}
@@ -113,28 +195,27 @@ export default function HomeScreen() {
                 <TouchableOpacity
                   onPress={() => router.push("/learn")}
                   style={[
-                    styles.btnPrimary,
+                    responsiveStyles.btnPrimary,
                     { backgroundColor: theme.primary },
                   ]}
                 >
-                  <Text style={styles.btnPrimaryText}>Go to Course</Text>
+                  <Text style={responsiveStyles.btnPrimaryText}>Go to Course</Text>
                 </TouchableOpacity>
               </Animated.View>
             </Animated.View>
 
-            {isWeb && (
+            {Platform.OS === 'web' && (
               <Animated.View
-                style={[styles.heroImageContainer, { opacity: fadeImage }]}
+                style={[responsiveStyles.heroImageContainer, { opacity: fadeImage }]}
               >
-                <View style={[styles.heroImageWrapper, { overflow: 'hidden' }]}>
+                <View style={responsiveStyles.heroImageWrapper}>
                   <Image
-                    source={{
-                      uri: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Emblem_of_India.svg/800px-Emblem_of_India.svg.png",
+                    source={require("../../assets/images/emblem.png")}
+                    style={{
+                      width: width > 1200 ? 380 : 300,
+                      height: width > 1200 ? 380 : 300,
+                      tintColor: isDarkMode ? "#FFFFFF" : "#000000",
                     }}
-                    style={[
-                      styles.heroImage,
-                      { tintColor: isDarkMode ? "#94A3B8" : "#2D5A61" },
-                    ]}
                     resizeMode="contain"
                   />
                 </View>
@@ -159,7 +240,7 @@ export default function HomeScreen() {
               activeOpacity={0.9}
               onPress={() => router.push("/learn")}
               style={[
-                styles.continueCard,
+                responsiveStyles.continueCard,
                 {
                   backgroundColor: isDarkMode ? theme.surfaceAlt : "#F0F7F8",
                   borderColor: theme.border,
@@ -209,7 +290,7 @@ export default function HomeScreen() {
                 Daily Current Affairs
               </Text>
             </View>
-            <View style={styles.affairsGrid}>
+            <View style={responsiveStyles.affairsGrid}>
               {[1, 2, 3].map((item) => (
                 <TouchableOpacity
                   key={item}
@@ -246,7 +327,7 @@ export default function HomeScreen() {
 
         {/* --- WEB INFO & INSTALL APP (Web Only) --- */}
         {
-          isWeb && (
+          Platform.OS === 'web' && (
             <View
               style={[
                 styles.webInfoSection,
@@ -282,58 +363,42 @@ const styles = StyleSheet.create({
   responsiveWrapper: {
     width: "100%",
     alignSelf: "center",
-    paddingHorizontal: isWeb ? '5%' : 20,
     maxWidth: 1100,
     paddingTop: 30,
     paddingBottom: 100
   },
   heroSection: {
-    flexDirection: isWeb && width > 800 ? "row" : "column",
-    paddingVertical: isWeb && width > 800 ? 48 : 20,
-    gap: isWeb && width > 800 ? 48 : 16,
     alignItems: "center",
   },
   heroTextContainer: { flex: 1 },
   welcomeText: {
-    fontSize: isWeb && width > 800 ? 16 : 12,
     fontWeight: "800",
-    marginBottom: isWeb && width > 800 ? 16 : 8,
     letterSpacing: 1,
     textTransform: "uppercase",
   },
   heroTitle: {
-    fontSize: width > 800 ? 56 : 30,
     fontWeight: "900",
-    marginBottom: isWeb && width > 800 ? 24 : 12,
-    lineHeight: width > 800 ? 64 : 36,
     letterSpacing: -1,
   },
-  heroSub: { fontSize: width > 800 ? 18 : 13, lineHeight: width > 800 ? 28 : 20, marginBottom: isWeb && width > 800 ? 32 : 16 },
+  heroSub: { fontWeight: "400" },
   btnPrimary: {
     alignSelf: "flex-start",
-    paddingHorizontal: width > 800 ? 32 : 24,
-    paddingVertical: width > 800 ? 16 : 12,
     borderRadius: 12,
     elevation: 2,
-    minHeight: width > 800 ? 48 : 40,
     justifyContent: "center",
   },
-  btnPrimaryText: { color: "#FFF", fontWeight: "800", fontSize: width > 800 ? 16 : 14 },
+  btnPrimaryText: { color: "#FFF", fontWeight: "800" },
   heroImageContainer: {
     flex: 1,
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
-    minHeight: width > 800 ? 450 : 200,
-    marginTop: width > 800 ? 0 : 8,
   },
   heroImageWrapper: {
-    width: width > 800 ? 500 : "100%",
-    height: width > 800 ? 380 : 180, // Reduced height to crop bottom text
+    overflow: 'hidden',
   },
   heroImage: {
     width: "100%",
-    height: width > 800 ? 450 : 220, // Keep full height to prevent squishing
     marginTop: 0,
   },
   section: { paddingVertical: 32 },
@@ -346,9 +411,6 @@ const styles = StyleSheet.create({
 
   // Continue Learning Styles
   continueCard: {
-    flexDirection: width > 600 ? "row" : "column",
-    alignItems: width > 600 ? "center" : "stretch",
-    justifyContent: "space-between",
     padding: 24,
     borderRadius: 16,
     borderWidth: 1,
@@ -381,7 +443,7 @@ const styles = StyleSheet.create({
   },
   resumeBtnText: { color: "#FFF", fontWeight: "800", fontSize: 16 },
 
-  affairsGrid: { flexDirection: width > 800 ? "row" : "column", gap: 24 },
+  affairsGrid: { gap: 24 },
   affairCard: {
     flex: 1,
     padding: 24,
