@@ -208,7 +208,10 @@ export default function ProfileScreen() {
                             {
                                 text: "Logout",
                                 style: 'destructive',
-                                onPress: () => router.push('/login')
+                                onPress: async () => {
+                                    await AsyncStorage.removeItem('is_logged_in');
+                                    router.replace('/login');
+                                }
                             }
                         ])}
                     >

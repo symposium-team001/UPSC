@@ -39,7 +39,7 @@ export default function LearnScreen() {
         <View style={[styles.container, { backgroundColor: theme.background }]}>
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-                <SafeAreaView edges={['bottom']} style={styles.mainWrapper}>
+                <SafeAreaView edges={['top', 'bottom']} style={styles.mainWrapper}>
 
                     <View style={[styles.header, { flexDirection: 'row', alignItems: 'center' }]}>
                         {Platform.OS === 'web' && (
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
         maxWidth: 1100,
         alignSelf: 'center',
         width: '100%',
-        paddingTop: 30
+        paddingTop: Platform.OS === 'web' ? 40 : 16,
     },
     header: { marginBottom: 40 },
     headerTitle: { fontSize: Platform.OS === 'web' ? 36 : 28, fontWeight: '900', letterSpacing: -0.5 },
