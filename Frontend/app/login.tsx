@@ -4,6 +4,7 @@ import {
     KeyboardAvoidingView, Platform, ScrollView, SafeAreaView,
     Alert, ActivityIndicator, Animated, Dimensions
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
 import { Svg, Path } from 'react-native-svg';
@@ -40,9 +41,15 @@ export default function LoginScreen() {
             return;
         }
         setLoading(true);
-        setTimeout(() => {
-            setLoading(false);
-            router.replace('/(tabs)');
+        setTimeout(async () => {
+            try {
+                await AsyncStorage.setItem('is_logged_in', 'true');
+                setLoading(false);
+                router.replace('/(tabs)');
+            } catch (error) {
+                setLoading(false);
+                Alert.alert("Error", "Failed to save login session.");
+            }
         }, 1200);
     };
 
