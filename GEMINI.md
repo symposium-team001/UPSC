@@ -1,10 +1,5 @@
 # GEMINI.md — AI Assistant Context for UPSC Platform Backend
 
-> This file provides full project context to AI coding assistants (Gemini, Claude, Copilot, etc.).
-> Keep this file up to date as the project evolves.
-> **Paste this entire file at the start of every AI coding session.**
-
----
 
 ## 🔒 AI ASSISTANT OPERATING MODE (MANDATORY)
 
