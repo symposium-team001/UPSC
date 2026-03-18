@@ -62,13 +62,16 @@ HIGH LEVEL MODULES
 --------------------------------------------------
 
 1. Authentication Module
-2. User & Profile Management
-3. Course & Content Management
-4. Exam & Quiz Engine
-5. Progress & Tracking System
-6. Payment & Subscription System
-7. Notification System
-8. Admin Dashboard
+2. User & Enhanced Profile Management
+3. Gamification & Achievement Engine (XP, Streaks, Levels)
+4. Current Affairs & Editorial System
+5. AI Editorial Analyst (Chat) System
+6. Syllabus, Course & Content Management
+7. Exam & Quiz Engine
+8. Progress & Tracking System (Recall Rate, Subject-wise Stats)
+9. Subscription Engine (Monthly, Quarterly, Yearly)
+10. Notification System
+11. Admin Dashboard
 
 --------------------------------------------------
 AUTHENTICATION RULES
@@ -99,14 +102,16 @@ Critical collections:
 
 users
 profiles
-courses
+user_stats (gamification tracking)
+achievements
+articles (current affairs)
+chat_sessions (AI Analyst)
+courses / subjects
 lessons
 quizzes
 questions
 submissions
 subscriptions
-payments
-notifications
 
 --------------------------------------------------
 SECURITY STANDARDS
@@ -115,7 +120,7 @@ SECURITY STANDARDS
 - Helmet.js for secure headers
 - CORS strict policy
 - Rate limiting
-- Input validation
+- Input validation (Zod / Joi)
 - No internal stack traces in production
 - Environment variable validation at startup
 
@@ -142,7 +147,7 @@ CODE STYLE RULES
 PERFORMANCE RULES
 --------------------------------------------------
 
-- Use pagination for lists
+- Use pagination for lists (Current affairs, Courses)
 - Use indexing
 - Avoid N+1 query problems using `populate` thoughtfully or aggregations
 - Optimize DB queries

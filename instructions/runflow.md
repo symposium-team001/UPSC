@@ -2,8 +2,8 @@
 
 Before doing anything else, send this:
 
-Follow GEMINI.md strictly.
-Follow instructions.md strictly.
+Follow [GEMINI.md](./GEMINI.md) strictly.
+Follow [instructions.md](./instructions.md) strictly.
 We will execute phases one by one.
 Do not skip phases.
 Do not generate future phase code.
@@ -15,7 +15,7 @@ This locks the behavior.
 
 ## Step 2 — Execute Phase 1 Only
 
-Open your instructions.md.
+Open your [instructions.md](./instructions.md).
 
 Copy ONLY Phase 1 prompt.
 
