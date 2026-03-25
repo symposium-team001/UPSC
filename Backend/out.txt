@@ -1,0 +1,10 @@
+file:///J:/UPSC/Backend/src/utils/jwt.utils.js:2
+import { config } from '../config/env.js';
+         ^^^^^^
+SyntaxError: The requested module '../config/env.js' does not provide an export named 'config'
+    at ModuleJob._instantiate (node:internal/modules/esm/module_job:180:21)
+    at async ModuleJob.run (node:internal/modules/esm/module_job:263:5)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:547:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:116:5)
+
+Node.js v22.12.0
